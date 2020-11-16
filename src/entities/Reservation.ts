@@ -25,18 +25,6 @@ export class Reservation extends BaseEntity {
   @ManyToOne(() => Meeting, (m) => m.reservations)
   meeting: Meeting;
 
-  @Field()
-  @Column()
-  firstName!: string;
-
-  @Field()
-  @Column()
-  lastName!: string;
-
-  @Field()
-  @Column()
-  phone!: number;
-
   @Field(() => String)
   @CreateDateColumn()
   createdAt = moment.utc().format();
@@ -47,9 +35,5 @@ export class Reservation extends BaseEntity {
 
   @Field()
   @Column()
-  email!: string;
-
-  @Field()
-  @Column()
-  birthDate!: string;
+  qrText!: string;
 }
