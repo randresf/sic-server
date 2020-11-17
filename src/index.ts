@@ -9,15 +9,16 @@ import { buildSchema } from "type-graphql";
 import { MeetingResolver } from "./resolvers/meeting";
 import { QuestionResolver } from "./resolvers/questions";
 import { Question } from "./entities/Questions";
+import { UserResolver } from "./resolvers/user";
 
 const port = process.env.PORT || 4000;
 
 const main = async () => {
   const conn = await createConnection({
     type: "postgres",
-    database: "sic-server",
-    username: "postgres",
-    password: "admin",
+    database: process.env.DB_NAME,
+    username: process.env.PG_USERNAME,
+    password: process.env.PG_PWD || undefined,
     logging: true,
     synchronize: true,
     entities: [User, Meeting, Reservation, Question],
@@ -25,7 +26,7 @@ const main = async () => {
 
   const app = express();
   const schema = await buildSchema({
-    resolvers: [MeetingResolver, QuestionResolver],
+    resolvers: [MeetingResolver, QuestionResolver, UserResolver],
     validate: false,
   });
 

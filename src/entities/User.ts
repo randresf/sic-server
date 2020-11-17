@@ -32,8 +32,16 @@ export class User extends BaseEntity {
   lastName!: string;
 
   @Field()
-  @Column()
+  @Column({ type: "bigint" })
   phone!: number;
+
+  @Field()
+  @Column({ type: "bigint", nullable: true })
+  contactNumber: number;
+
+  @Field()
+  @Column({ type: String, nullable: true })
+  emergenceContact: string;
 
   @Field(() => String)
   @CreateDateColumn()
