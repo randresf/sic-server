@@ -12,7 +12,7 @@ import { Question } from "./entities/Questions";
 import { UserResolver } from "./resolvers/user";
 
 const port = process.env.PORT || 4000;
-console.log(process.env);
+
 const main = async () => {
   const conn = await createConnection({
     type: "postgres",
