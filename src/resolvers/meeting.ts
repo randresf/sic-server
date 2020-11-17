@@ -1,5 +1,5 @@
 import { Arg, Field, InputType, Mutation, Query, Resolver } from "type-graphql";
-import { Meeting } from "../entities/Meeting"
+import { Meeting } from "../entities/Meeting";
 
 @InputType()
 class MeetingInput {
@@ -13,17 +13,14 @@ class MeetingInput {
 
 @Resolver(Meeting)
 export class MeetingResolver {
-
   @Query(() => [Meeting])
   async meetings(): Promise<Meeting[]> {
-    const meeting = await Meeting.find({})
-    return meeting
+    const meeting = await Meeting.find({});
+    return meeting;
   }
 
   @Mutation(() => Meeting)
-  async createMeeting(
-    @Arg("data") data: MeetingInput
-  ): Promise<Meeting> {
-    return Meeting.create({ ...data }).save()
+  async createMeeting(@Arg("data") data: MeetingInput): Promise<Meeting> {
+    return Meeting.create({ ...data }).save();
   }
 }

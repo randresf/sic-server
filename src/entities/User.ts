@@ -10,6 +10,7 @@ import {
 import moment from "moment";
 import { Reservation } from "./Reservation";
 import { Field, ObjectType } from "type-graphql";
+import { Question } from "./Questions";
 
 @ObjectType()
 @Entity()
@@ -52,4 +53,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Reservation, (reservation) => reservation.citizen)
   reservations: Reservation[];
+
+  @OneToMany(() => Question, (question) => question.citizen)
+  questions: Question[];
 }
