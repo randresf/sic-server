@@ -7,6 +7,8 @@ import { Reservation } from "./entities/Reservation";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { MeetingResolver } from "./resolvers/meeting";
+import { QuestionResolver } from "./resolvers/questions";
+import { Question } from "./entities/Questions";
 
 const port = process.env.PORT || 4000;
 
@@ -14,24 +16,24 @@ const main = async () => {
   const conn = await createConnection({
     type: "postgres",
     database: "sic-server",
-    username: "randresf",
-    password: "randresf",
+    username: "postgres",
+    password: "admin",
     logging: true,
     synchronize: true,
-    entities: [User, Meeting, Reservation],
+    entities: [User, Meeting, Reservation, Question],
   });
 
   const app = express();
   const schema = await buildSchema({
-    resolvers: [MeetingResolver],
-    validate: false
-  })
+    resolvers: [MeetingResolver, QuestionResolver],
+    validate: false,
+  });
 
   const apolloServer = new ApolloServer({
-    schema
-  })
+    schema,
+  });
 
-  apolloServer.applyMiddleware({ app })
+  apolloServer.applyMiddleware({ app });
 
   app.listen(port, () => {
     console.log("🚀 ready on port 4000 🚀 ");
