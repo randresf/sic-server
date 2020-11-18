@@ -19,7 +19,7 @@ const main = async () => {
     database: process.env.DB_NAME,
     username: process.env.PG_USERNAME,
     password: process.env.PG_PWD || undefined,
-    logging: true,
+    logging: false,
     synchronize: true,
     entities: [User, Meeting, Reservation, Question],
   });
@@ -37,7 +37,7 @@ const main = async () => {
   apolloServer.applyMiddleware({ app });
 
   app.listen(port, () => {
-    console.log("🚀 ready on port 4000 🚀 ");
+    console.log(`🚀 ready on port ${port} 🚀 `);
   });
 };
 
