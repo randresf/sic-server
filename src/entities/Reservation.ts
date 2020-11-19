@@ -22,6 +22,10 @@ export class Reservation extends BaseEntity {
   @ManyToOne(() => User, (user) => user.reservations)
   citizen!: User;
 
+  @Field()
+  @Column()
+  citizenId!: number;
+
   @ManyToOne(() => Meeting, (m) => m.reservations)
   meeting: Meeting;
 

@@ -1,4 +1,4 @@
-import { InputType, Field } from "type-graphql";
+import { InputType, Field, ObjectType } from "type-graphql";
 
 @InputType()
 export class UserInput {
@@ -25,4 +25,14 @@ export class UserInput {
 
   @Field({ nullable: true })
   contactNumer?: number;
+}
+
+
+
+@ObjectType()
+export class ErrorField {
+  @Field()
+  field: string;
+  @Field()
+  message: string;
 }

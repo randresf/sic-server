@@ -7,16 +7,8 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
-import { UserInput } from "./types";
+import { ErrorField, UserInput } from "./types";
 import { validateRegister } from "../utils/validateRegister";
-
-@ObjectType()
-class ErrorField {
-  @Field()
-  field: string;
-  @Field()
-  message: string;
-}
 
 @ObjectType()
 class UserResponse {
@@ -29,7 +21,7 @@ class UserResponse {
 @Resolver(User)
 export class UserResolver {
   @Query(() => UserResponse)
-  async user(@Arg("citizenId") citizenId: string): Promise<UserResponse> {
+  async user(@Arg("citizenId", () => String) citizenId: string): Promise<UserResponse> {
     const user = await User.findOne({ citizenId });
     if (!user)
       return { errors: { field: "citizenId", message: "usuario no existe" } };
@@ -37,7 +29,7 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async createUser(@Arg("data") data: UserInput): Promise<UserResponse> {
+  async createUser(@Arg("data", () => UserInput) data: UserInput): Promise<UserResponse> {
     const errors = validateRegister(data);
     if (errors) return { errors };
     return { user: await User.create({ ...data }).save() };

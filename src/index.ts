@@ -10,6 +10,8 @@ import { MeetingResolver } from "./resolvers/meeting";
 import { QuestionResolver } from "./resolvers/questions";
 import { Question } from "./entities/Questions";
 import { UserResolver } from "./resolvers/user";
+import { __isProd__ } from "./constants";
+import path from "path"
 
 const port = process.env.PORT || 4000;
 
@@ -19,10 +21,13 @@ const main = async () => {
     database: process.env.DB_NAME,
     username: process.env.PG_USERNAME,
     password: process.env.PG_PWD || undefined,
-    logging: false,
+    logging: !__isProd__,
     synchronize: true,
     entities: [User, Meeting, Reservation, Question],
+    migrations: [path.join(__dirname, "./migrations/*")]
   });
+
+  await conn.runMigrations()
 
   const app = express();
   const schema = await buildSchema({
