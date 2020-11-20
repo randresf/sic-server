@@ -16,8 +16,8 @@ import { Question } from "./Questions";
 @Entity()
 export class User extends BaseEntity {
   @Field()
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Field()
   @Column({ unique: true })
@@ -37,11 +37,11 @@ export class User extends BaseEntity {
 
   @Field()
   @Column({ type: "bigint", nullable: true })
-  contactNumber: number;
+  contactNumber?: number;
 
   @Field()
   @Column({ type: String, nullable: true })
-  emergenceContact: string;
+  emergenceContact?: string;
 
   @Field(() => String)
   @CreateDateColumn()

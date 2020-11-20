@@ -15,8 +15,8 @@ import { Field, ObjectType } from "type-graphql";
 @Entity()
 export class Meeting extends BaseEntity {
   @Field()
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
   @Field()
   @Column()

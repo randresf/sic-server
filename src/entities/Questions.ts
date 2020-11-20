@@ -15,8 +15,8 @@ import { Field, ObjectType } from "type-graphql";
 @Entity()
 export class Question extends BaseEntity {
   @Field()
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @ManyToOne(() => User, (user) => user.questions)
   citizen!: User;
