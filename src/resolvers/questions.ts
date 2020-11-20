@@ -1,15 +1,37 @@
-import { Arg, Field, InputType, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Field,
+  InputType,
+  Mutation,
+  Query,
+  Resolver,
+  ObjectType,
+} from "type-graphql";
 import { Question } from "../entities/Questions";
 
+@ObjectType()
+class QuestionResponse {
+  @Field()
+  error?: string;
+  @Field()
+  saved?: boolean;
+}
+
 @InputType()
-class QuestionInput {
+class QuestionType {
+  @Field()
+  citizenId!: string;
   @Field()
   questionId!: string;
   @Field()
-  questionText!: string;
-  @Field()
   answer!: string;
 }
+
+// @InputType()
+// class QuestionInput {
+//   @Field(() => [QuestionType])
+//   questions!: QuestionType[];
+// }
 
 @Resolver(Question)
 export class QuestionResolver {
@@ -19,8 +41,12 @@ export class QuestionResolver {
     return question;
   }
 
-  @Mutation(() => Question)
-  async registrerQuestion(@Arg("data") data: QuestionInput): Promise<Question> {
-    return Question.create({ ...data }).save();
+  @Mutation(() => QuestionResponse)
+  async registrerQuestion(
+    @Arg("questions", () => [QuestionType]) questions: [QuestionType]
+  ): Promise<QuestionResponse> {
+    const response = await Question.insert(questions);
+    console.log(response);
+    return { saved: true };
   }
 }

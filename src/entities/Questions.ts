@@ -23,11 +23,11 @@ export class Question extends BaseEntity {
 
   @Field()
   @Column()
-  questionId!: string;
+  citizenId!: string;
 
   @Field()
   @Column()
-  questionText!: string;
+  questionId!: string;
 
   @Field()
   @Column()
