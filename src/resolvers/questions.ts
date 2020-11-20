@@ -5,7 +5,7 @@ import {
   Mutation,
   Query,
   Resolver,
-  ObjectType
+  ObjectType,
 } from "type-graphql";
 import { Question } from "../entities/Questions";
 
@@ -20,18 +20,18 @@ class QuestionResponse {
 @InputType()
 class QuestionType {
   @Field()
-  citizienId!: string;
+  citizenId!: string;
   @Field()
   questionId!: string;
   @Field()
   answer!: string;
 }
 
-@InputType()
-class QuestionInput {
-  @Field(() => [QuestionType])
-  questions!: QuestionType[];
-}
+// @InputType()
+// class QuestionInput {
+//   @Field(() => [QuestionType])
+//   questions!: QuestionType[];
+// }
 
 @Resolver(Question)
 export class QuestionResolver {
@@ -43,7 +43,7 @@ export class QuestionResolver {
 
   @Mutation(() => QuestionResponse)
   async registrerQuestion(
-    @Arg("questions") questions: [QuestionType]
+    @Arg("questions", () => [QuestionType]) questions: [QuestionType]
   ): Promise<QuestionResponse> {
     const response = await Question.insert(questions);
     console.log(response);

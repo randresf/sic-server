@@ -4,7 +4,7 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
-  BaseEntity
+  BaseEntity,
 } from "typeorm";
 
 import moment from "moment";
@@ -18,10 +18,7 @@ export class Question extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(
-    () => User,
-    user => user.questions
-  )
+  @ManyToOne(() => User, (user) => user.questions)
   citizen!: User;
 
   @Field()
@@ -31,10 +28,6 @@ export class Question extends BaseEntity {
   @Field()
   @Column()
   questionId!: string;
-
-  @Field()
-  @Column()
-  questionText!: string;
 
   @Field()
   @Column()
