@@ -27,8 +27,6 @@ export class UserInput {
   contactNumer?: number;
 }
 
-
-
 @ObjectType()
 export class ErrorField {
   @Field()
