@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
+    "build": "tsc",
     "dev": "env-cmd nodemon",
     "create:migration": "npx typeorm  migration:create"
   },
