@@ -1,5 +1,14 @@
-import { Arg, Field, InputType, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Field,
+  InputType,
+  Mutation,
+  ObjectType,
+  Query,
+  Resolver,
+} from "type-graphql";
 import { Meeting } from "../entities/Meeting";
+import { ErrorField } from "./types";
 
 @InputType()
 class MeetingInput {
@@ -11,11 +20,35 @@ class MeetingInput {
   meetingDate!: string;
 }
 
+@ObjectType()
+class MeetingRes {
+  @Field(() => Meeting)
+  meeting?: Meeting | Meeting[];
+  @Field(() => [ErrorField])
+  errors?: ErrorField[];
+}
+
 @Resolver(Meeting)
 export class MeetingResolver {
   @Query(() => [Meeting])
   async meetings(): Promise<Meeting[]> {
     const meeting = await Meeting.find({});
+    return meeting;
+  }
+
+  @Query(() => MeetingRes)
+  async meeting(@Arg("id") id: string): Promise<MeetingRes> {
+    const meeting = await Meeting.findOne({ id });
+    if (!meeting)
+      return { errors: [{ field: "", message: "meeting not found" }] };
+    return { meeting };
+  }
+
+  @Query(() => [Meeting])
+  async meetingsById(
+    @Arg("ids", () => [String]) ids: string[]
+  ): Promise<Meeting[]> {
+    const meeting = await Meeting.findByIds(ids);
     return meeting;
   }
 
