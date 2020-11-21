@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   BaseEntity,
+  PrimaryColumn,
 } from "typeorm";
 
 import moment from "moment";
@@ -22,7 +23,14 @@ export class Reservation extends BaseEntity {
   @ManyToOne(() => User, (user) => user.reservations)
   citizen!: User;
 
-  @ManyToOne(() => Meeting, (m) => m.reservations)
+  @Field()
+  @PrimaryColumn()
+  meetingId: string;
+
+  @PrimaryColumn()
+  userId: string;
+
+  @ManyToOne(() => Meeting, (m) => m.reservations, { onDelete: "CASCADE" })
   meeting: Meeting;
 
   @Field(() => String)

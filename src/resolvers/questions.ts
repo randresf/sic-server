@@ -45,8 +45,7 @@ export class QuestionResolver {
   async registrerQuestion(
     @Arg("questions", () => [QuestionType]) questions: [QuestionType]
   ): Promise<QuestionResponse> {
-    const response = await Question.insert(questions);
-    console.log(response);
+    await Question.insert(questions);
     return { saved: true };
   }
 }

@@ -1,10 +1,10 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   ManyToOne,
   BaseEntity,
+  PrimaryColumn,
 } from "typeorm";
 
 import moment from "moment";
@@ -15,15 +15,11 @@ import { Field, ObjectType } from "type-graphql";
 @Entity()
 export class Question extends BaseEntity {
   @Field()
-  @PrimaryGeneratedColumn("uuid")
-  id: string;
+  @PrimaryColumn()
+  citizenId: string;
 
   @ManyToOne(() => User, (user) => user.questions)
   citizen!: User;
-
-  @Field()
-  @Column()
-  citizenId!: string;
 
   @Field()
   @Column()
