@@ -1,7 +1,16 @@
 import { User } from "../entities/User";
-import { Arg, Field, Mutation, ObjectType, Resolver } from "type-graphql";
+import {
+  Arg,
+  Field,
+  FieldResolver,
+  Mutation,
+  ObjectType,
+  Resolver,
+  Root,
+} from "type-graphql";
 import { ErrorField, UserInput } from "./types";
 import { validateRegister } from "../utils/validateRegister";
+import { Reservation } from "../entities/Reservation";
 
 @ObjectType()
 class UserResponse {
@@ -10,6 +19,12 @@ class UserResponse {
   @Field(() => [ErrorField], { nullable: true })
   errors?: ErrorField[];
 }
+
+// @ObjectType()
+// class ReservationResponse {
+//   @Field(() => [Reservation])
+//   reservations?: Reservation[] | null;
+// }
 
 @Resolver(User)
 export class UserResolver {
@@ -21,6 +36,11 @@ export class UserResolver {
     if (!user)
       return { errors: [{ field: "citizenId", message: "usuario no existe" }] };
     return { user };
+  }
+
+  @FieldResolver(() => [Reservation] || null)
+  reservations(@Root() user: User) {
+    return Reservation.find({ where: { userId: user.id } });
   }
 
   @Mutation(() => UserResponse)

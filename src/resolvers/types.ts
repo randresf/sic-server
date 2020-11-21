@@ -1,3 +1,4 @@
+import { createReservationsLoader } from "src/utils/createReservationsLoader";
 import { InputType, Field, ObjectType } from "type-graphql";
 
 @InputType()
@@ -34,3 +35,9 @@ export class ErrorField {
   @Field()
   message: string;
 }
+
+export type MyContext = {
+  req: Request;
+  res: Response;
+  reservationLoader: ReturnType<typeof createReservationsLoader>;
+};

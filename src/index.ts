@@ -11,7 +11,8 @@ import { QuestionResolver } from "./resolvers/questions";
 import { Question } from "./entities/Questions";
 import { UserResolver } from "./resolvers/user";
 import { __isProd__ } from "./constants";
-import path from "path"
+import path from "path";
+// import { createReservationsLoader } from "./utils/createReservationsLoader";
 
 const port = process.env.PORT || 4000;
 
@@ -24,10 +25,10 @@ const main = async () => {
     logging: !__isProd__,
     synchronize: true,
     entities: [User, Meeting, Reservation, Question],
-    migrations: [path.join(__dirname, "./migrations/*")]
+    migrations: [path.join(__dirname, "./migrations/*")],
   });
 
-  await conn.runMigrations()
+  await conn.runMigrations();
 
   const app = express();
   const schema = await buildSchema({
@@ -37,6 +38,11 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema,
+    context: ({ res, req }) => ({
+      req,
+      res,
+      //reservationsLoader: createReservationsLoader(),
+    }),
   });
 
   apolloServer.applyMiddleware({ app });
