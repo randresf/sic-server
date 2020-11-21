@@ -5,10 +5,13 @@ import {
   CreateDateColumn,
   OneToMany,
   BaseEntity,
+  BeforeInsert,
+  JoinColumn,
 } from "typeorm";
 
 import moment from "moment";
 import { Reservation } from "./Reservation";
+import { v4 } from "uuid";
 import { Field, ObjectType } from "type-graphql";
 
 @ObjectType()
@@ -43,5 +46,11 @@ export class Meeting extends BaseEntity {
   isActive: boolean;
 
   @OneToMany(() => Reservation, (res) => res.meeting)
+  @JoinColumn({ referencedColumnName: "meetingId" })
   reservations: Reservation[];
+
+  @BeforeInsert()
+  addId() {
+    this.id = v4();
+  }
 }

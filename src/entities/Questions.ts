@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   ManyToOne,
   BaseEntity,
+  BeforeInsert,
 } from "typeorm";
 
 import moment from "moment";
 import { User } from "./User";
+import { v4 } from "uuid";
 import { Field, ObjectType } from "type-graphql";
 
 @ObjectType()
@@ -42,4 +44,9 @@ export class Question extends BaseEntity {
 
   @CreateDateColumn()
   updatedAt = moment.utc().format();
+
+  @BeforeInsert()
+  addId() {
+    this.id = v4();
+  }
 }
