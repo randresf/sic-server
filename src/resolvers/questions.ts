@@ -27,12 +27,6 @@ class QuestionType {
   answer!: string;
 }
 
-// @InputType()
-// class QuestionInput {
-//   @Field(() => [QuestionType])
-//   questions!: QuestionType[];
-// }
-
 @Resolver(Question)
 export class QuestionResolver {
   @Query(() => [Question])
