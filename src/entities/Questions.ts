@@ -25,10 +25,6 @@ export class Question extends BaseEntity {
 
   @Field()
   @Column()
-  citizenId!: string;
-
-  @Field()
-  @Column()
   questionId!: string;
 
   @Field()

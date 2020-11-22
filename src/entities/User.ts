@@ -24,7 +24,7 @@ export class User extends BaseEntity {
 
   @Field()
   @Column({ unique: true })
-  citizenId: string;
+  document: string;
 
   @Field()
   @Column()
@@ -67,7 +67,7 @@ export class User extends BaseEntity {
   reservations: Reservation[];
 
   @OneToMany(() => Question, (question) => question.citizen)
-  @JoinColumn({ referencedColumnName: "citizenId" })
+  @JoinColumn({ referencedColumnName: "userId" })
   questions: Question[];
 
   @BeforeInsert()

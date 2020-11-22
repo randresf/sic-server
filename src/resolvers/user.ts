@@ -30,11 +30,11 @@ class UserResponse {
 export class UserResolver {
   @Mutation(() => UserResponse)
   async user(
-    @Arg("citizenId", () => String) citizenId: string
+    @Arg("document", () => String) document: string
   ): Promise<UserResponse> {
-    const user = await User.findOne({ citizenId });
+    const user = await User.findOne({ document });
     if (!user)
-      return { errors: [{ field: "citizenId", message: "usuario no existe" }] };
+      return { errors: [{ field: "document", message: "usuario no existe" }] };
     return { user };
   }
 
