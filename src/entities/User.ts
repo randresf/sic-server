@@ -5,12 +5,15 @@ import {
   CreateDateColumn,
   OneToMany,
   BaseEntity,
+  BeforeInsert,
+  JoinColumn,
 } from "typeorm";
 
 import moment from "moment";
 import { Reservation } from "./Reservation";
 import { Field, ObjectType } from "type-graphql";
 import { Question } from "./Questions";
+import { v4 } from "uuid";
 
 @ObjectType()
 @Entity()
@@ -21,7 +24,7 @@ export class User extends BaseEntity {
 
   @Field()
   @Column({ unique: true })
-  citizenId: string;
+  document: string;
 
   @Field()
   @Column()
@@ -60,8 +63,15 @@ export class User extends BaseEntity {
   birthDate!: string;
 
   @OneToMany(() => Reservation, (reservation) => reservation.citizen)
+  @JoinColumn({ referencedColumnName: "userId" })
   reservations: Reservation[];
 
   @OneToMany(() => Question, (question) => question.citizen)
+  @JoinColumn({ referencedColumnName: "userId" })
   questions: Question[];
+
+  @BeforeInsert()
+  addId() {
+    this.id = v4();
+  }
 }

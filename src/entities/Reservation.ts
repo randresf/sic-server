@@ -6,12 +6,14 @@ import {
   ManyToOne,
   BaseEntity,
   PrimaryColumn,
+  BeforeInsert,
 } from "typeorm";
 
 import moment from "moment";
 import { User } from "./User";
 import { Meeting } from "./Meeting";
 import { Field, ObjectType } from "type-graphql";
+import { v4 } from "uuid";
 
 @ObjectType()
 @Entity()
@@ -44,4 +46,9 @@ export class Reservation extends BaseEntity {
   @Field()
   @Column()
   qrText!: string;
+
+  @BeforeInsert()
+  addId() {
+    this.id = v4();
+  }
 }

@@ -4,19 +4,21 @@ import {
   CreateDateColumn,
   ManyToOne,
   BaseEntity,
-  PrimaryColumn,
+  BeforeInsert,
+  PrimaryGeneratedColumn,
 } from "typeorm";
 
 import moment from "moment";
 import { User } from "./User";
+import { v4 } from "uuid";
 import { Field, ObjectType } from "type-graphql";
 
 @ObjectType()
 @Entity()
 export class Question extends BaseEntity {
   @Field()
-  @PrimaryColumn()
-  citizenId: string;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @ManyToOne(() => User, (user) => user.questions)
   citizen!: User;
@@ -34,4 +36,9 @@ export class Question extends BaseEntity {
 
   @CreateDateColumn()
   updatedAt = moment.utc().format();
+
+  @BeforeInsert()
+  addId() {
+    this.id = v4();
+  }
 }
