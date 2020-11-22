@@ -4,7 +4,7 @@ import { InputType, Field, ObjectType } from "type-graphql";
 @InputType()
 export class UserInput {
   @Field()
-  citizenId: string;
+  document: string;
 
   @Field()
   firstName!: string;

@@ -20,18 +20,12 @@ class QuestionResponse {
 @InputType()
 class QuestionType {
   @Field()
-  citizenId!: string;
+  UserId!: string;
   @Field()
   questionId!: string;
   @Field()
   answer!: string;
 }
-
-// @InputType()
-// class QuestionInput {
-//   @Field(() => [QuestionType])
-//   questions!: QuestionType[];
-// }
 
 @Resolver(Question)
 export class QuestionResolver {
@@ -45,7 +39,13 @@ export class QuestionResolver {
   async registrerQuestion(
     @Arg("questions", () => [QuestionType]) questions: [QuestionType]
   ): Promise<QuestionResponse> {
-    await Question.insert(questions);
-    return { saved: true };
+    console.log(questions);
+    try {
+      await Question.insert(questions);
+
+      return { saved: true };
+    } catch (error) {
+      return { error };
+    }
   }
 }
