@@ -1,3 +1,4 @@
+import { User } from "../entities/User";
 import {
   Arg,
   Field,
@@ -19,8 +20,8 @@ class QuestionResponse {
 
 @InputType()
 class QuestionType {
-  @Field()
-  UserId!: string;
+  // @Field()
+  // userId!: string;
   @Field()
   questionId!: string;
   @Field()
@@ -37,12 +38,15 @@ export class QuestionResolver {
 
   @Mutation(() => QuestionResponse)
   async registrerQuestion(
-    @Arg("questions", () => [QuestionType]) questions: [QuestionType]
+    @Arg("questions", () => [QuestionType]) questions: [QuestionType],
+    @Arg("userId", () => String) userId: string
   ): Promise<QuestionResponse> {
-    console.log(questions);
+    const user = await User.findOne({ id: userId });
+    if (!user) return { error: "usuario invalido" };
     try {
-      await Question.insert(questions);
-
+      questions.forEach(
+        async (question) => await Question.insert({ ...question, user })
+      );
       return { saved: true };
     } catch (error) {
       return { error };

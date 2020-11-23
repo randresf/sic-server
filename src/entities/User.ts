@@ -6,7 +6,6 @@ import {
   OneToMany,
   BaseEntity,
   BeforeInsert,
-  JoinColumn,
 } from "typeorm";
 
 import moment from "moment";
@@ -62,12 +61,12 @@ export class User extends BaseEntity {
   @Column()
   birthDate!: string;
 
-  @OneToMany(() => Reservation, (reservation) => reservation.citizen)
-  @JoinColumn({ referencedColumnName: "userId" })
+  @OneToMany(() => Reservation, (reservation) => reservation.citizen, {
+    cascade: true,
+  })
   reservations: Reservation[];
 
-  @OneToMany(() => Question, (question) => question.citizen)
-  @JoinColumn({ referencedColumnName: "userId" })
+  @OneToMany(() => Question, (question) => question.user, { cascade: true })
   questions: Question[];
 
   @BeforeInsert()

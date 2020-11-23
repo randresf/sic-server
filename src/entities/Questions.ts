@@ -21,7 +21,7 @@ export class Question extends BaseEntity {
   id: string;
 
   @ManyToOne(() => User, (user) => user.questions)
-  citizen!: User;
+  user!: User;
 
   @Field()
   @Column()
