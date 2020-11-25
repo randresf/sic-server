@@ -20,8 +20,6 @@ class QuestionResponse {
 
 @InputType()
 class QuestionType {
-  // @Field()
-  // userId!: string;
   @Field()
   questionId!: string;
   @Field()
@@ -51,5 +49,6 @@ export class QuestionResolver {
     } catch (error) {
       return { error };
     }
+    return { saved: true };
   }
 }
