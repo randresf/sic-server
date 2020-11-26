@@ -19,6 +19,8 @@ class UserResponse {
   user?: User;
   @Field(() => [ErrorField], { nullable: true })
   errors?: ErrorField[];
+  @Field()
+  userId?: string;
 }
 
 @InputType()
@@ -99,12 +101,15 @@ export class UserResolver {
   ): Promise<UserResponse> {
     let returning: UserResponse = {};
     try {
-      const userContact = await User.update({ id: userId }, { ...contactData });
-      if (userContact) {
-        // returning = contactData;
-      }
+      await User.update({ id: userId }, { ...contactData });
+
+      returning = {
+        userId,
+      };
     } catch (err) {
-      // returning = { errors: [{ field: "", message: err.message }] };
+      returning = {
+        errors: [{ field: "", message: "Error al actualizar el usaurio" }],
+      };
     }
     return returning;
   }

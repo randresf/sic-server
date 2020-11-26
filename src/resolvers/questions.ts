@@ -41,14 +41,15 @@ export class QuestionResolver {
   ): Promise<QuestionResponse> {
     const user = await User.findOne({ id: userId });
     if (!user) return { error: "usuario invalido" };
+    let returning: QuestionResponse = {};
     try {
       questions.forEach(
         async (question) => await Question.insert({ ...question, user })
       );
-      return { saved: true };
+      returning = { saved: true };
     } catch (error) {
-      return { error };
+      returning = { error: "ocurrio un error al guardar las respuestas" };
     }
-    return { saved: true };
+    return returning;
   }
 }
