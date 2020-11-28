@@ -5,6 +5,7 @@ import {
   FieldResolver,
   Mutation,
   ObjectType,
+  Query,
   Resolver,
   Root,
 } from "type-graphql";
@@ -55,7 +56,7 @@ export class UserResolver {
     return Reservation.find({ where: { userId: user.id } });
   }
 
-  @Mutation(() => UserResponse)
+  @Query(() => UserResponse)
   async userById(
     @Arg("userId", () => String) userId: string
   ): Promise<UserResponse> {
@@ -75,21 +76,29 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
-  async updateUser(
+  async saveUser(
     @Arg("data", () => UserInput) data: UserInput,
-    @Arg("userId", () => String) userId: string
+    @Arg("userId", () => String, { nullable: true }) userId?: string
   ): Promise<UserResponse> {
     const errors = validateRegister(data);
     if (errors && errors.length > 0) return { errors };
     let returning: UserResponse = {};
     try {
-      const user = (await User.update({ id: userId }, { ...data })).raw[0];
-      returning = {
-        user,
-      };
+      if (userId) {
+        const user = await User.update(
+          { id: userId, document: data.document },
+          { ...data }
+        );
+        returning = {
+          user: { id: userId, ...user.raw[0] },
+        };
+      } else {
+        returning = { user: await User.create({ ...data }).save() };
+      }
     } catch (err) {
-      console.log(err);
-      returning = { errors: [{ field: "", message: err.message }] };
+      if (err.message.includes("duplicate key value violates")) {
+        returning = { errors: [{ field: "", message: "documento ya existe" }] };
+      } else returning = { errors: [{ field: "", message: err.message }] };
     }
     return returning;
   }
