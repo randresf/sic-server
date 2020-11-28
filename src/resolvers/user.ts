@@ -11,6 +11,7 @@ import {
 import { ErrorField, UserInput } from "./types";
 import { validateRegister } from "../utils/validateRegister";
 import { Reservation } from "../entities/Reservation";
+import { InputType } from "type-graphql";
 
 @ObjectType()
 class UserResponse {
@@ -18,8 +19,19 @@ class UserResponse {
   user?: User;
   @Field(() => [ErrorField], { nullable: true })
   errors?: ErrorField[];
+  @Field()
+  userId?: string;
 }
 
+@InputType()
+class userContactType {
+  @Field()
+  contactNumber!: number;
+  @Field()
+  emergenceContact!: string;
+}
+
+@InputType()
 // @ObjectType()
 // class ReservationResponse {
 //   @Field(() => [Reservation])
@@ -78,6 +90,26 @@ export class UserResolver {
     } catch (err) {
       console.log(err);
       returning = { errors: [{ field: "", message: err.message }] };
+    }
+    return returning;
+  }
+
+  @Mutation(() => UserResponse)
+  async updateContactUser(
+    @Arg("userId", () => String) userId: string,
+    @Arg("contactData", () => userContactType) contactData: userContactType
+  ): Promise<UserResponse> {
+    let returning: UserResponse = {};
+    try {
+      await User.update({ id: userId }, { ...contactData });
+
+      returning = {
+        userId,
+      };
+    } catch (err) {
+      returning = {
+        errors: [{ field: "", message: "Error al actualizar el usaurio" }],
+      };
     }
     return returning;
   }
