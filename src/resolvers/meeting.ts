@@ -22,9 +22,9 @@ class MeetingInput {
 
 @ObjectType()
 class MeetingRes {
-  @Field(() => Meeting)
+  @Field(() => Meeting, { nullable: true })
   meeting?: Meeting | Meeting[];
-  @Field(() => [ErrorField])
+  @Field(() => [ErrorField], { nullable: true })
   errors?: ErrorField[];
 }
 

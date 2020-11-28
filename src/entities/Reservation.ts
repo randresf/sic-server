@@ -44,8 +44,8 @@ export class Reservation extends BaseEntity {
   updatedAt = moment.utc().format();
 
   @Field()
-  @Column()
-  qrText!: string;
+  @Column({ nullable: true })
+  qrText?: string;
 
   @BeforeInsert()
   addId() {

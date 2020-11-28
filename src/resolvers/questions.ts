@@ -12,9 +12,9 @@ import { Question } from "../entities/Questions";
 
 @ObjectType()
 class QuestionResponse {
-  @Field()
+  @Field(() => String, { nullable: true })
   error?: string;
-  @Field()
+  @Field(() => Boolean, { nullable: true })
   saved?: boolean;
 }
 
@@ -41,11 +41,10 @@ export class QuestionResolver {
   ): Promise<QuestionResponse> {
     const user = await User.findOne({ id: userId });
     if (!user) return { error: "usuario invalido" };
-    let returning: QuestionResponse = {};
+    let returning;
     try {
-      questions.forEach(
-        async (question) => await Question.insert({ ...question, user })
-      );
+      const adduserr = questions.map((q) => ({ ...q, user }));
+      await Question.insert(adduserr);
       returning = { saved: true };
     } catch (error) {
       returning = { error: "ocurrio un error al guardar las respuestas" };

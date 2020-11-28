@@ -7,8 +7,9 @@ import { Reservation } from "./entities/Reservation";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { MeetingResolver } from "./resolvers/meeting";
-import { QuestionResolver } from "./resolvers/questions";
 import { Question } from "./entities/Questions";
+import { QuestionResolver } from "./resolvers/questions";
+import { ReservationResolver } from "./resolvers/reservation";
 import { UserResolver } from "./resolvers/user";
 import { __isProd__ } from "./constants";
 import path from "path";
@@ -32,7 +33,12 @@ const main = async () => {
 
   const app = express();
   const schema = await buildSchema({
-    resolvers: [MeetingResolver, QuestionResolver, UserResolver],
+    resolvers: [
+      MeetingResolver,
+      QuestionResolver,
+      UserResolver,
+      ReservationResolver,
+    ],
     validate: false,
   });
 
