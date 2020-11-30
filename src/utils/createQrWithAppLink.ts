@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-const BASE_URL = process.env.PROD ? "www.dnsic.com" : "localhost:3000";
+const BASE_URL = "www.dnsic.com.co";
 const createQRWithAppLink = async (link: string) => {
   try {
     return await QRCode.toDataURL(`https://${BASE_URL}/${link}`);
