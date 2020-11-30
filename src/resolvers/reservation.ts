@@ -55,6 +55,15 @@ export class ReservationResolver {
           },
         ],
       };
+    if (userReservations.find((r) => r.meetingId === data.meetingId))
+      return {
+        errors: [
+          {
+            field: "reservations",
+            message: "el usuario ya reservo esta reunion",
+          },
+        ],
+      };
 
     const meeting = await Meeting.findOne({ id: data.meetingId });
     if (!meeting)
