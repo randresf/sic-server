@@ -32,7 +32,11 @@ class MeetingRes {
 export class MeetingResolver {
   @Query(() => [Meeting])
   async meetings(): Promise<Meeting[]> {
-    const meeting = await Meeting.find({});
+    const meeting = await Meeting.find({
+      order: {
+        createdAt: "ASC",
+      },
+    });
     return meeting;
   }
 
