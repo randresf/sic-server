@@ -7,8 +7,10 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
+import { Between } from "typeorm";
 import { Meeting } from "../entities/Meeting";
 import { ErrorField } from "./types";
+import moment from "moment";
 
 @InputType()
 class MeetingInput {
@@ -32,9 +34,15 @@ class MeetingRes {
 export class MeetingResolver {
   @Query(() => [Meeting])
   async meetings(): Promise<Meeting[]> {
+    const today = moment()
+    const nextWeek = moment().add(7, 'd')
     const meeting = await Meeting.find({
+      where: {
+        meetingDate: Between(today.utc(), nextWeek.utc())
+
+      },
       order: {
-        createdAt: "ASC",
+        meetingDate: "ASC",
       },
     });
     return meeting;
@@ -60,4 +68,16 @@ export class MeetingResolver {
   async createMeeting(@Arg("data") data: MeetingInput): Promise<Meeting> {
     return Meeting.create({ ...data }).save();
   }
+
+  // @Mutation(() => MeetingRes)
+  // async saveMeeting(
+  //   @Arg("data") data: MeetingInput,
+  //   @Arg("meetingId", () => String, { nullable: true }) meetingId: string): Promise<MeetingRes> {
+  //   if (!meetingId)
+  //     return { meeting: await Meeting.create({ ...data }).save() }
+  //   const meeting = await Meeting.findOne({ id: meetingId })
+  //   if (!meeting)
+  //     return { errors: [{ field: "", message: "meeting not found" }] }
+  //   const update = 
+  // }
 }

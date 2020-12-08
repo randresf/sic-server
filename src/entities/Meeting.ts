@@ -29,9 +29,9 @@ export class Meeting extends BaseEntity {
   @Column()
   spots!: number;
 
-  @Field()
+  @Field(() => Date)
   @Column()
-  meetingDate!: string;
+  meetingDate!: Date;
 
   @Field(() => String)
   @CreateDateColumn()
