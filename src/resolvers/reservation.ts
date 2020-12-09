@@ -15,6 +15,7 @@ import { User } from "../entities/User";
 import createQRWithAppLink from "../utils/createQrWithAppLink";
 import { getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
+import moment from "moment";
 
 @ObjectType()
 class ReservationResponse {
@@ -135,9 +136,27 @@ export class ReservationResolver {
     // update spots
     const meeting = await Meeting.findOne(reservation.meetingId);
     if (!meeting) return false;
+    const canDelete = moment(meeting.meetingDate) > moment()
+    if (!canDelete) return false;
     meeting.spots = meeting.spots + 1;
     await meeting.save();
     await reservation.remove();
     return true;
   }
+
+  // @Mutation(() => Boolean)
+  // async confirmReservation(
+  //   @Arg("reservationId", () => String) id: string,
+  //   @Arg("document", () => String) document: string
+  // ): Promise<Boolean> {
+  //   const reservation = await Reservation.findOne({ id, userId });
+  //   if (!reservation) return false;
+  //   // update spots
+  //   const meeting = await Meeting.findOne(reservation.meetingId);
+  //   if (!meeting) return false;
+  //   meeting.spots = meeting.spots + 1;
+  //   await meeting.save();
+  //   await reservation.remove();
+  //   return true;
+  // }
 }
