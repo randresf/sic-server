@@ -47,7 +47,7 @@ export class ReservationResolver {
       };
     // check for previous reservations
     const userReservations = await Reservation.find({ userId: data.userId });
-    if (userReservations.length > 2)
+    if (userReservations.length > 3)
       return {
         errors: [
           {
@@ -136,7 +136,7 @@ export class ReservationResolver {
     // update spots
     const meeting = await Meeting.findOne(reservation.meetingId);
     if (!meeting) return false;
-    const canDelete = moment(meeting.meetingDate) > moment()
+    const canDelete = moment(meeting.meetingDate) > moment();
     if (!canDelete) return false;
     meeting.spots = meeting.spots + 1;
     await meeting.save();
