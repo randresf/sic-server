@@ -34,12 +34,11 @@ class MeetingRes {
 export class MeetingResolver {
   @Query(() => [Meeting])
   async meetings(): Promise<Meeting[]> {
-    const today = moment()
-    const nextWeek = moment().add(7, 'd')
+    const today = moment().subtract(1, "d");
+    const nextWeek = moment().add(7, "d");
     const meeting = await Meeting.find({
       where: {
-        meetingDate: Between(today.utc(), nextWeek.utc())
-
+        meetingDate: Between(today.utc(), nextWeek.utc()),
       },
       order: {
         meetingDate: "ASC",
@@ -78,6 +77,6 @@ export class MeetingResolver {
   //   const meeting = await Meeting.findOne({ id: meetingId })
   //   if (!meeting)
   //     return { errors: [{ field: "", message: "meeting not found" }] }
-  //   const update = 
+  //   const update =
   // }
 }
