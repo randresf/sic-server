@@ -6,11 +6,14 @@ import {
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from "type-graphql";
-import { Between } from "typeorm";
+import { Between, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
 import { ErrorField } from "./types";
 import moment from "moment";
+import { isAuth } from "../middleware/isAuth";
+import { Place } from "../entities/Place";
 
 @InputType()
 class MeetingInput {
@@ -20,6 +23,8 @@ class MeetingInput {
   spots!: number;
   @Field()
   meetingDate!: string;
+  @Field()
+  place!: string;
 }
 
 @ObjectType()
@@ -63,20 +68,27 @@ export class MeetingResolver {
     return meeting;
   }
 
-  @Mutation(() => Meeting)
-  async createMeeting(@Arg("data") data: MeetingInput): Promise<Meeting> {
-    return Meeting.create({ ...data }).save();
+  @UseMiddleware(isAuth)
+  @Mutation(() => MeetingRes)
+  async saveMeeting(
+    @Arg("data") data: MeetingInput,
+    @Arg("meetingId", () => String, { nullable: true }) meetingId: string
+  ): Promise<MeetingRes> {
+    const place = await Place.findOne(data.place);
+    if (!place)
+      return { errors: [{ field: "place", message: "place not found" }] };
+    if (!meetingId)
+      return { meeting: await Meeting.create({ ...data, place }).save() };
+    const meeting = await Meeting.findOne({ id: meetingId });
+    if (!meeting)
+      return { errors: [{ field: "meetingId", message: "meeting not found" }] };
+    const update = await getConnection()
+      .createQueryBuilder()
+      .update(Meeting)
+      .set({ ...data, place })
+      .where("id = :id", { id: meetingId })
+      .returning("*")
+      .execute();
+    return update.raw[0];
   }
-
-  // @Mutation(() => MeetingRes)
-  // async saveMeeting(
-  //   @Arg("data") data: MeetingInput,
-  //   @Arg("meetingId", () => String, { nullable: true }) meetingId: string): Promise<MeetingRes> {
-  //   if (!meetingId)
-  //     return { meeting: await Meeting.create({ ...data }).save() }
-  //   const meeting = await Meeting.findOne({ id: meetingId })
-  //   if (!meeting)
-  //     return { errors: [{ field: "", message: "meeting not found" }] }
-  //   const update =
-  // }
 }
