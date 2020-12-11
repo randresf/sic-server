@@ -7,6 +7,7 @@ import {
   BaseEntity,
   PrimaryColumn,
   BeforeInsert,
+  UpdateDateColumn
 } from "typeorm";
 
 import moment from "moment";
@@ -40,7 +41,7 @@ export class Reservation extends BaseEntity {
   createdAt = moment.utc().format();
 
   @Field(() => String)
-  @CreateDateColumn()
+  @UpdateDateColumn()
   updatedAt = moment.utc().format();
 
   @Field()
