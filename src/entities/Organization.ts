@@ -1,42 +1,49 @@
+// this entity would be the top in the hierarchy
 import {
   Entity,
+  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  ManyToOne,
+  OneToMany,
   BaseEntity,
   BeforeInsert,
-  PrimaryGeneratedColumn,
   UpdateDateColumn
 } from "typeorm";
 
 import moment from "moment";
-import { User } from "./User";
 import { v4 } from "uuid";
 import { Field, ObjectType } from "type-graphql";
+import { Place } from "./Place";
+import { Admin } from "./Admin";
 
 @ObjectType()
 @Entity()
-export class Question extends BaseEntity {
+export class Organization extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn("uuid")
-  id: string;
-
-  @ManyToOne(() => User, (user) => user.questions)
-  user!: User;
+  id!: string;
 
   @Field()
   @Column()
-  questionId!: string;
+  name!: string;
 
-  @Field()
-  @Column()
-  answer!: string;
-
+  @Field(() => String)
   @CreateDateColumn()
   createdAt = moment.utc().format();
 
+  @Field(() => String)
   @UpdateDateColumn()
   updatedAt = moment.utc().format();
+
+  @Field()
+  @Column({ default: true })
+  isActive: boolean;
+
+  @OneToMany(() => Place, (res) => res.owner)
+  places: Place[];
+
+  @OneToMany(() => Admin, (res) => res.organization)
+  admins: Admin[];
 
   @BeforeInsert()
   addId() {

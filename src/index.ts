@@ -1,18 +1,19 @@
 import "reflect-metadata";
 import { createConnection } from "typeorm";
 import express from "express";
-import { User } from "./entities/User";
-import { Meeting } from "./entities/Meeting";
-import { Reservation } from "./entities/Reservation";
+import path from "path";
+import Redis from "ioredis";
+import connecRedis from "connect-redis";
+import session from "express-session";
+import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { MeetingResolver } from "./resolvers/meeting";
-import { Question } from "./entities/Questions";
 import { QuestionResolver } from "./resolvers/questions";
 import { ReservationResolver } from "./resolvers/reservation";
 import { UserResolver } from "./resolvers/user";
-import { __isProd__ } from "./constants";
-import path from "path";
+import { __isProd__, cookieName } from "./constants";
+import { MyContext } from "./resolvers/types";
 // import { createReservationsLoader } from "./utils/createReservationsLoader";
 
 const port = process.env.PORT || 4000;
@@ -25,34 +26,62 @@ const main = async () => {
     password: process.env.PG_PWD || undefined,
     logging: !__isProd__,
     synchronize: true,
-    entities: [User, Meeting, Reservation, Question],
-    migrations: [path.join(__dirname, "./migrations/*")],
+    entities: [path.join(__dirname, "./entities/*")],
+    migrations: [path.join(__dirname, "./migrations/*")]
   });
 
   //await Meeting.delete({})
   await conn.runMigrations();
 
+  const ReduisStore = connecRedis(session);
+  const redisClient = new Redis();
+
   const app = express();
+
+  app.use(
+    cors({
+      origin: "http://localhost:3000",
+      credentials: true
+    })
+  );
+
+  app.use(
+    session({
+      name: cookieName,
+      store: new ReduisStore({ client: redisClient, disableTouch: true }),
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        httpOnly: true,
+        secure: __isProd__,
+        sameSite: "lax"
+      },
+      saveUninitialized: false,
+      secret: process.env.SECRET_SESSION_KEY || "af0r0",
+      resave: false
+    })
+  );
+
   const schema = await buildSchema({
     resolvers: [
       MeetingResolver,
       QuestionResolver,
       UserResolver,
-      ReservationResolver,
+      ReservationResolver
     ],
-    validate: false,
+    validate: false
   });
 
   const apolloServer = new ApolloServer({
     schema,
-    context: ({ res, req }) => ({
+    context: ({ res, req }): MyContext => ({
       req,
       res,
+      redisClient
       //reservationsLoader: createReservationsLoader(),
-    }),
+    })
   });
 
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({ app, cors: false });
 
   app.listen(port, () => {
     console.log(`🚀 ready on port ${port} 🚀 `);

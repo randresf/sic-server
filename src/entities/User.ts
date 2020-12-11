@@ -6,6 +6,7 @@ import {
   OneToMany,
   BaseEntity,
   BeforeInsert,
+  UpdateDateColumn
 } from "typeorm";
 
 import moment from "moment";
@@ -50,7 +51,7 @@ export class User extends BaseEntity {
   createdAt = moment.utc().format();
 
   @Field(() => String)
-  @CreateDateColumn()
+  @UpdateDateColumn()
   updatedAt = moment.utc().format();
 
   @Field()
@@ -62,7 +63,7 @@ export class User extends BaseEntity {
   birthDate!: string;
 
   @OneToMany(() => Reservation, (reservation) => reservation.citizen, {
-    cascade: true,
+    cascade: true
   })
   reservations: Reservation[];
 
