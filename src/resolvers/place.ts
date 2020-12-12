@@ -1,14 +1,15 @@
-import { isAuth } from "src/middleware/isAuth";
+import { Organization } from "../entities/Organization";
+import { isAuth } from "../middleware/isAuth";
 import {
   Arg,
   Field,
   Mutation,
   ObjectType,
   Resolver,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
 import { Place } from "../entities/Place";
-import { ErrorField, placeInput } from "./types";
+import { ErrorField, PlaceInput } from "../types";
 
 @ObjectType()
 class PlaceResponse {
@@ -16,33 +17,39 @@ class PlaceResponse {
   errors?: ErrorField[];
   @Field(() => Place, { nullable: true })
   place?: Place;
-  @Field()
-  idPlace?: string;
 }
 
 @Resolver(Place)
-export default class PlaceResolver {
+export class PlaceResolver {
   @Mutation(() => PlaceResponse)
   @UseMiddleware(isAuth)
-  async registrerPlace(@Arg("data") data: placeInput): Promise<PlaceResponse> {
-    return { place: await Place.create({ ...data }).save() };
+  async addPlace(
+    @Arg("idOrg") idOrg: string,
+    @Arg("data") data: PlaceInput
+  ): Promise<PlaceResponse> {
+    const org = await Organization.findOne(idOrg);
+    if (!org)
+      return {
+        errors: [{ field: "organizationId", message: "organizacion no existe" }]
+      };
+    return { place: await Place.create({ ...data, owner: org }).save() };
   }
 
   @Mutation(() => PlaceResponse)
   @UseMiddleware(isAuth)
   async updatePlace(
     @Arg("idPlace") idPlace: string,
-    @Arg("data") data: placeInput
+    @Arg("data") data: PlaceInput
   ): Promise<PlaceResponse> {
     let returning: PlaceResponse = {};
     try {
-      await Place.update({ id: idPlace }, { ...data });
+      const updatePlace = await Place.update({ id: idPlace }, { ...data });
       returning = {
-        idPlace,
+        place: { ...updatePlace.raw[0] }
       };
     } catch (err) {
       returning = {
-        errors: [{ field: "", message: "Error al actualizar el lugar" }],
+        errors: [{ field: "", message: "Error al actualizar el lugar" }]
       };
     }
     return returning;

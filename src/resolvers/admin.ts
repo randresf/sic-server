@@ -1,4 +1,4 @@
-import { Admin } from "src/entities/Admin";
+import { Admin } from "../entities/Admin";
 import {
   Arg,
   Ctx,
@@ -9,12 +9,12 @@ import {
   Resolver,
   UseMiddleware
 } from "type-graphql";
-import { AdminInput, ErrorField, MyContext } from "./types";
+import { AdminInput, ErrorField, MyContext } from "../types";
 import { verify as argonVerify, hash as argonHash } from "argon2";
-import { validateAdminData } from "src/utils/validateAdminData";
+import { validateAdminData } from "../utils/validateAdminData";
 import { getConnection } from "typeorm";
-import { Organization } from "src/entities/Organization";
-import { isAuth } from "src/middleware/isAuth";
+import { Organization } from "../entities/Organization";
+import { isAuth } from "../middleware/isAuth";
 
 @ObjectType()
 class LoginResponse {
@@ -25,7 +25,7 @@ class LoginResponse {
 }
 
 @Resolver(Admin)
-export default class AdminResolver {
+export class AdminResolver {
   @Query(() => Admin, { nullable: true })
   heartBeat(@Ctx() { req }: MyContext) {
     const { adminId } = req.session;
@@ -52,7 +52,9 @@ export default class AdminResolver {
 
   @Mutation(() => LoginResponse)
   @UseMiddleware(isAuth)
-  async register(@Arg("options") options: AdminInput): Promise<LoginResponse> {
+  async register(
+    @Arg("options", () => AdminInput) options: AdminInput
+  ): Promise<LoginResponse> {
     const { organizationId, ...adminData } = options;
     const org = await Organization.findOne(organizationId);
     if (!org)

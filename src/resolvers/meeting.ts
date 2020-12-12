@@ -6,11 +6,11 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
 import { Between, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
-import { ErrorField } from "./types";
+import { ErrorField } from "../types";
 import moment from "moment";
 import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
@@ -43,11 +43,11 @@ export class MeetingResolver {
     const nextWeek = moment().add(7, "d");
     const meeting = await Meeting.find({
       where: {
-        meetingDate: Between(today.utc(), nextWeek.utc()),
+        meetingDate: Between(today.utc(), nextWeek.utc())
       },
       order: {
-        meetingDate: "ASC",
-      },
+        meetingDate: "ASC"
+      }
     });
     return meeting;
   }
@@ -68,8 +68,8 @@ export class MeetingResolver {
     return meeting;
   }
 
-  @UseMiddleware(isAuth)
   @Mutation(() => MeetingRes)
+  @UseMiddleware(isAuth)
   async saveMeeting(
     @Arg("data") data: MeetingInput,
     @Arg("meetingId", () => String, { nullable: true }) meetingId: string

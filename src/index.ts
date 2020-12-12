@@ -8,12 +8,14 @@ import session from "express-session";
 import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
+import { __isProd__, cookieName } from "./constants";
 import { MeetingResolver } from "./resolvers/meeting";
 import { QuestionResolver } from "./resolvers/questions";
 import { ReservationResolver } from "./resolvers/reservation";
 import { UserResolver } from "./resolvers/user";
-import { __isProd__, cookieName } from "./constants";
-import { MyContext } from "./resolvers/types";
+import { AdminResolver } from "./resolvers/admin";
+import { PlaceResolver } from "./resolvers/place";
+import { MyContext } from "./types";
 // import { createReservationsLoader } from "./utils/createReservationsLoader";
 
 const port = process.env.PORT || 4000;
@@ -27,7 +29,7 @@ const main = async () => {
     logging: !__isProd__,
     synchronize: true,
     entities: [path.join(__dirname, "./entities/*")],
-    migrations: [path.join(__dirname, "./migrations/*")],
+    migrations: [path.join(__dirname, "./migrations/*")]
   });
 
   //await Meeting.delete({})
@@ -41,7 +43,7 @@ const main = async () => {
   app.use(
     cors({
       origin: "http://localhost:3000",
-      credentials: true,
+      credentials: true
     })
   );
 
@@ -53,11 +55,11 @@ const main = async () => {
         maxAge: 1000 * 60 * 60 * 24 * 7,
         httpOnly: true,
         secure: __isProd__,
-        sameSite: "lax",
+        sameSite: "lax"
       },
       saveUninitialized: false,
       secret: process.env.SECRET_SESSION_KEY || "af0r0",
-      resave: false,
+      resave: false
     })
   );
 
@@ -67,8 +69,10 @@ const main = async () => {
       QuestionResolver,
       UserResolver,
       ReservationResolver,
+      AdminResolver,
+      PlaceResolver
     ],
-    validate: false,
+    validate: false
   });
 
   const apolloServer = new ApolloServer({
@@ -76,9 +80,9 @@ const main = async () => {
     context: ({ res, req }): MyContext => ({
       req,
       res,
-      redisClient,
+      redisClient
       //reservationsLoader: createReservationsLoader(),
-    }),
+    })
   });
 
   apolloServer.applyMiddleware({ app, cors: false });

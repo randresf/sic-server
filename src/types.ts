@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Redis } from "ioredis";
-// import { createReservationsLoader } from "src/utils/createReservationsLoader";
+// import { createReservationsLoader } from "../utils/createReservationsLoader";
 import { InputType, Field, ObjectType } from "type-graphql";
 
 // express-session.d.ts
@@ -11,6 +11,23 @@ declare module "express-session" {
     adminId?: string;
   }
 }
+
+export type MyContext = {
+  req: Request;
+  res: Response;
+  //reservationLoader: ReturnType<typeof createReservationsLoader>;
+  redisClient: Redis;
+};
+
+@ObjectType()
+export class ErrorField {
+  @Field()
+  field: string;
+  @Field()
+  message: string;
+}
+
+///////// INPUTS ///////
 
 @InputType()
 export class UserInput {
@@ -39,21 +56,7 @@ export class UserInput {
   contactNumer?: number;
 }
 
-@ObjectType()
-export class ErrorField {
-  @Field()
-  field: string;
-  @Field()
-  message: string;
-}
-
-export type MyContext = {
-  req: Request;
-  res: Response;
-  //reservationLoader: ReturnType<typeof createReservationsLoader>;
-  redisClient: Redis;
-};
-
+@InputType()
 export class AdminInput {
   @Field()
   firstName!: string;
@@ -71,7 +74,8 @@ export class AdminInput {
   organizationId?: string;
 }
 
-export class placeInput {
+@InputType()
+export class PlaceInput {
   @Field()
   name!: string;
 
@@ -79,8 +83,5 @@ export class placeInput {
   address!: string;
 
   @Field()
-  username!: string;
-
-  @Field(() => String)
-  password!: string;
+  isActive?: boolean;
 }
