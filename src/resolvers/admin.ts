@@ -1,4 +1,4 @@
-import { Admin } from "src/entities/Admin";
+import { Admin } from "../entities/Admin";
 import {
   Arg,
   Ctx,
@@ -9,12 +9,13 @@ import {
   Resolver,
   UseMiddleware
 } from "type-graphql";
-import { AdminInput, ErrorField, MyContext } from "./types";
+import { AdminInput, ErrorField, MyContext } from "../types";
 import { verify as argonVerify, hash as argonHash } from "argon2";
-import { validateAdminData } from "src/utils/validateAdminData";
+import { validateAdminData } from "../utils/validateAdminData";
 import { getConnection } from "typeorm";
-import { Organization } from "src/entities/Organization";
-import { isAuth } from "src/middleware/isAuth";
+import { Organization } from "../entities/Organization";
+import { isAuth } from "../middleware/isAuth";
+import { cookieName } from "../constants";
 
 @ObjectType()
 class LoginResponse {
@@ -25,9 +26,10 @@ class LoginResponse {
 }
 
 @Resolver(Admin)
-export default class AdminResolver {
+export class AdminResolver {
   @Query(() => Admin, { nullable: true })
   heartBeat(@Ctx() { req }: MyContext) {
+    console.log(req.session);
     const { adminId } = req.session;
     if (!adminId) return null;
     return Admin.findOne(adminId);
@@ -40,19 +42,38 @@ export default class AdminResolver {
     @Ctx() { req }: MyContext
   ): Promise<LoginResponse> {
     const admin = await Admin.findOne({ username });
-    if (admin) {
+    if (admin && admin.isActive) {
       const isValid = await argonVerify(admin.password, password);
       if (isValid) {
         req.session.adminId = admin.id;
         return { admin };
       }
     }
-    return { errors: [{ field: "", message: "datos incorrectos" }] };
+    return {
+      errors: [{ field: "", message: "datos incorrectos o usuario inactivo" }]
+    };
+  }
+
+  @Mutation(() => Boolean)
+  async logout(@Ctx() { req, res }: MyContext): Promise<Boolean> {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        res.clearCookie(cookieName);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      })
+    );
   }
 
   @Mutation(() => LoginResponse)
   @UseMiddleware(isAuth)
-  async register(@Arg("options") options: AdminInput): Promise<LoginResponse> {
+  async register(
+    @Arg("options", () => AdminInput) options: AdminInput
+  ): Promise<LoginResponse> {
     const { organizationId, ...adminData } = options;
     const org = await Organization.findOne(organizationId);
     if (!org)

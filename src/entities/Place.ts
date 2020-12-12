@@ -31,14 +31,6 @@ export class Place extends BaseEntity {
   @Column()
   address!: string;
 
-  @Field()
-  @Column()
-  username!: string;
-
-  @Field(() => String)
-  @Column()
-  password!: string;
-
   @Field(() => String)
   @CreateDateColumn()
   createdAt = moment.utc().format();

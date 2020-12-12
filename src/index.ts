@@ -8,12 +8,14 @@ import session from "express-session";
 import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
+import { __isProd__, cookieName } from "./constants";
 import { MeetingResolver } from "./resolvers/meeting";
 import { QuestionResolver } from "./resolvers/questions";
 import { ReservationResolver } from "./resolvers/reservation";
 import { UserResolver } from "./resolvers/user";
-import { __isProd__, cookieName } from "./constants";
-import { MyContext } from "./resolvers/types";
+import { AdminResolver } from "./resolvers/admin";
+import { PlaceResolver } from "./resolvers/place";
+import { MyContext } from "./types";
 // import { createReservationsLoader } from "./utils/createReservationsLoader";
 
 const port = process.env.PORT || 4000;
@@ -66,7 +68,9 @@ const main = async () => {
       MeetingResolver,
       QuestionResolver,
       UserResolver,
-      ReservationResolver
+      ReservationResolver,
+      AdminResolver,
+      PlaceResolver
     ],
     validate: false
   });

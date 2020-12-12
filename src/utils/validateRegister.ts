@@ -1,4 +1,4 @@
-import { UserInput } from "src/resolvers/types";
+import { UserInput } from "../types";
 
 export const validateRegister = ({ phone, email, birthDate }: UserInput) => {
   if (!phone) return;

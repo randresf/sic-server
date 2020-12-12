@@ -10,7 +10,7 @@ import {
 } from "type-graphql";
 import { Between, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
-import { ErrorField } from "./types";
+import { ErrorField } from "../types";
 import moment from "moment";
 import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
@@ -68,8 +68,8 @@ export class MeetingResolver {
     return meeting;
   }
 
-  @UseMiddleware(isAuth)
   @Mutation(() => MeetingRes)
+  @UseMiddleware(isAuth)
   async saveMeeting(
     @Arg("data") data: MeetingInput,
     @Arg("meetingId", () => String, { nullable: true }) meetingId: string

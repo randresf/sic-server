@@ -1,4 +1,4 @@
-import { AdminInput } from "../resolvers/types";
+import { AdminInput } from "../types";
 
 export const validateAdminData = (options: AdminInput) => {
   if (options.username.length <= 2) {

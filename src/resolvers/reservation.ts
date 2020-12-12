@@ -10,7 +10,7 @@ import {
   Resolver,
   Root
 } from "type-graphql";
-import { ErrorField } from "./types";
+import { ErrorField } from "../types";
 import { User } from "../entities/User";
 import createQRWithAppLink from "../utils/createQrWithAppLink";
 import { getConnection } from "typeorm";
