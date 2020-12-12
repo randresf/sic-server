@@ -38,7 +38,7 @@ export class Admin extends BaseEntity {
   email!: string;
 
   @Field()
-  @Column()
+  @Column({ unique: true })
   username!: string;
 
   @Field(() => String)

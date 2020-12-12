@@ -45,8 +45,8 @@ export class Meeting extends BaseEntity {
   updatedAt = moment.utc().format();
 
   @Field()
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ default: true, nullable: true })
+  isActive?: boolean;
 
   @OneToMany(() => Reservation, (res) => res.meeting)
   @JoinColumn({ referencedColumnName: "meetingId" })
