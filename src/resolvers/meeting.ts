@@ -6,7 +6,7 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
 import { Between, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
@@ -14,6 +14,7 @@ import { ErrorField } from "../types";
 import moment from "moment";
 import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
+import { Reservation } from "../entities/Reservation";
 
 @InputType()
 class MeetingInput {
@@ -30,7 +31,7 @@ class MeetingInput {
 @ObjectType()
 class MeetingRes {
   @Field(() => Meeting, { nullable: true })
-  meeting?: Meeting | Meeting[];
+  meeting?: Meeting | Meeting[] | null;
   @Field(() => [ErrorField], { nullable: true })
   errors?: ErrorField[];
 }
@@ -43,11 +44,11 @@ export class MeetingResolver {
     const nextWeek = moment().add(7, "d");
     const meeting = await Meeting.find({
       where: {
-        meetingDate: Between(today.utc(), nextWeek.utc())
+        meetingDate: Between(today.utc(), nextWeek.utc()),
       },
       order: {
-        meetingDate: "ASC"
-      }
+        meetingDate: "ASC",
+      },
     });
     return meeting;
   }
@@ -90,5 +91,29 @@ export class MeetingResolver {
       .returning("*")
       .execute();
     return update.raw[0];
+  }
+
+  @Mutation(() => MeetingRes)
+  @UseMiddleware(isAuth)
+  async deleteMeeting(
+    @Arg("meetingId", () => String, { nullable: true }) meetingId: string
+  ): Promise<MeetingRes> {
+    const thereIsReservation = await Reservation.findOne({
+      meetingId,
+    });
+    if (thereIsReservation)
+      return {
+        errors: [
+          {
+            field: "reservation",
+            message: "exist reservation whit this meeting",
+          },
+        ],
+      };
+    const deleteMeeting = await Meeting.delete(meetingId);
+    if (!deleteMeeting) {
+      return { errors: [{ field: "meetingId", message: "meeting not found" }] };
+    }
+    return { meeting: null };
   }
 }
