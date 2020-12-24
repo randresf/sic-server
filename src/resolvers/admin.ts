@@ -7,7 +7,7 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
 import { AdminInput, ErrorField, MyContext } from "../types";
 import { verify as argonVerify, hash as argonHash } from "argon2";
@@ -50,7 +50,7 @@ export class AdminResolver {
       }
     }
     return {
-      errors: [{ field: "", message: "datos incorrectos o usuario inactivo" }]
+      errors: [{ field: "", message: "datos incorrectos o usuario inactivo" }],
     };
   }
 
@@ -78,7 +78,9 @@ export class AdminResolver {
     const org = await Organization.findOne(organizationId);
     if (!org)
       return {
-        errors: [{ field: "organizationId", message: "organizacion no existe" }]
+        errors: [
+          { field: "organizationId", message: "organizacion no existe" },
+        ],
       };
     const errors = validateAdminData(adminData);
     if (errors) return { errors };
@@ -93,7 +95,7 @@ export class AdminResolver {
         .values({
           ...adminData,
           organization: org,
-          password: hashedPwd
+          password: hashedPwd,
         })
         .returning("*")
         .execute();
@@ -101,7 +103,7 @@ export class AdminResolver {
     } catch (error) {
       if (error.code === "23505") {
         return {
-          errors: [{ field: "username", message: "username already taken" }]
+          errors: [{ field: "username", message: "username already taken" }],
         };
       }
     }

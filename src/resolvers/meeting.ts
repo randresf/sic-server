@@ -73,13 +73,33 @@ export class MeetingResolver {
   @UseMiddleware(isAuth)
   async saveMeeting(
     @Arg("data") data: MeetingInput,
-    @Arg("meetingId", () => String, { nullable: true }) meetingId: string
+    @Arg("meetingId", () => String, { nullable: true }) meetingId?: string
   ): Promise<MeetingRes> {
     const place = await Place.findOne(data.place);
     if (!place)
       return { errors: [{ field: "place", message: "place not found" }] };
-    if (!meetingId)
-      return { meeting: await Meeting.create({ ...data, place }).save() };
+    if (!meetingId) {
+      return {
+        meeting: await Meeting.create({
+          ...data,
+          place,
+          meetingDate: new Date(data.meetingDate),
+        }).save(),
+      };
+    }
+    const thereIsReservation = await Reservation.findOne({
+      meetingId,
+    });
+    if (thereIsReservation) {
+      return {
+        errors: [
+          {
+            field: "reservation",
+            message: "exist reservation whit this meeting",
+          },
+        ],
+      };
+    }
     const meeting = await Meeting.findOne({ id: meetingId });
     if (!meeting)
       return { errors: [{ field: "meetingId", message: "meeting not found" }] };
