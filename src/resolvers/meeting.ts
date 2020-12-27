@@ -1,11 +1,13 @@
 import {
   Arg,
   Field,
+  FieldResolver,
   InputType,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from "type-graphql";
 import { Between, getConnection } from "typeorm";
@@ -43,6 +45,7 @@ export class MeetingResolver {
     const today = moment().subtract(1, "d");
     const nextWeek = moment().add(7, "d");
     const meeting = await Meeting.find({
+      relations: ["place"],
       where: {
         meetingDate: Between(today.utc(), nextWeek.utc()),
       },
@@ -51,6 +54,11 @@ export class MeetingResolver {
       },
     });
     return meeting;
+  }
+
+  @FieldResolver(() => Place || null)
+  place(@Root() meeting: Meeting) {
+    return meeting.place;
   }
 
   @Query(() => MeetingRes)

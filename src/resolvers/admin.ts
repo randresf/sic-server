@@ -29,7 +29,6 @@ class LoginResponse {
 export class AdminResolver {
   @Query(() => Admin, { nullable: true })
   heartBeat(@Ctx() { req }: MyContext) {
-    console.log(req.session);
     const { adminId } = req.session;
     if (!adminId) return null;
     return Admin.findOne(adminId);
