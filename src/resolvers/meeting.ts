@@ -1,5 +1,6 @@
 import {
   Arg,
+  Ctx,
   Field,
   FieldResolver,
   InputType,
@@ -8,11 +9,11 @@ import {
   Query,
   Resolver,
   Root,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
 import { Between, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
-import { ErrorField } from "../types";
+import { ErrorField, MyContext } from "../types";
 import moment from "moment";
 import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
@@ -43,13 +44,16 @@ class MeetingRes {
 @Resolver(Meeting)
 export class MeetingResolver {
   @Query(() => [Meeting])
-  async meetings(): Promise<Meeting[]> {
+  async meetings(@Ctx() { req }: MyContext): Promise<Meeting[]> {
+    const { adminId } = req.session;
+    const other = adminId ? {} : { isActive: true };
     const today = moment().subtract(1, "d");
     const nextWeek = moment().add(7, "d");
     const meeting = await Meeting.find({
       relations: ["place"],
       where: {
-        meetingDate: Between(today.utc(), nextWeek.utc())
+        meetingDate: Between(today.utc(), nextWeek.utc()),
+        ...other
       },
       order: {
         meetingDate: "ASC"
@@ -93,21 +97,21 @@ export class MeetingResolver {
         meeting: await Meeting.create({
           ...data,
           place,
-          meetingDate: new Date(data.meetingDate),
-        }).save(),
+          meetingDate: new Date(data.meetingDate)
+        }).save()
       };
     }
     const thereIsReservation = await Reservation.findOne({
-      meetingId,
+      meetingId
     });
     if (thereIsReservation) {
       return {
         errors: [
           {
             field: "reservation",
-            message: "exist reservation whit this meeting",
-          },
-        ],
+            message: "exist reservation whit this meeting"
+          }
+        ]
       };
     }
     const meeting = await Meeting.findOne({ id: meetingId });
@@ -129,16 +133,16 @@ export class MeetingResolver {
     @Arg("meetingId", () => String, { nullable: true }) meetingId: string
   ): Promise<MeetingRes> {
     const thereIsReservation = await Reservation.findOne({
-      meetingId,
+      meetingId
     });
     if (thereIsReservation)
       return {
         errors: [
           {
             field: "reservation",
-            message: "exist reservation whit this meeting",
-          },
-        ],
+            message: "exist reservation whit this meeting"
+          }
+        ]
       };
     const deleteMeeting = await Meeting.delete(meetingId);
     if (!deleteMeeting) {
