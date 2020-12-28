@@ -20,6 +20,8 @@ import { Reservation } from "../entities/Reservation";
 
 @InputType()
 class MeetingInput {
+  @Field({ nullable: true })
+  id?: string;
   @Field()
   title!: string;
   @Field()
