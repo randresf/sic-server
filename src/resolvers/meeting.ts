@@ -1,12 +1,14 @@
 import {
   Arg,
   Field,
+  FieldResolver,
   InputType,
   Mutation,
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware
+  Root,
+  UseMiddleware,
 } from "type-graphql";
 import { Between, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
@@ -14,9 +16,12 @@ import { ErrorField } from "../types";
 import moment from "moment";
 import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
+import { Reservation } from "../entities/Reservation";
 
 @InputType()
 class MeetingInput {
+  @Field({ nullable: true })
+  id?: string;
   @Field()
   title!: string;
   @Field()
@@ -30,7 +35,7 @@ class MeetingInput {
 @ObjectType()
 class MeetingRes {
   @Field(() => Meeting, { nullable: true })
-  meeting?: Meeting | Meeting[];
+  meeting?: Meeting | Meeting[] | null;
   @Field(() => [ErrorField], { nullable: true })
   errors?: ErrorField[];
 }
@@ -42,6 +47,7 @@ export class MeetingResolver {
     const today = moment().subtract(1, "d");
     const nextWeek = moment().add(7, "d");
     const meeting = await Meeting.find({
+      relations: ["place"],
       where: {
         meetingDate: Between(today.utc(), nextWeek.utc())
       },
@@ -50,6 +56,11 @@ export class MeetingResolver {
       }
     });
     return meeting;
+  }
+
+  @FieldResolver(() => Place || null)
+  place(@Root() meeting: Meeting) {
+    return meeting.place;
   }
 
   @Query(() => MeetingRes)
@@ -72,13 +83,33 @@ export class MeetingResolver {
   @UseMiddleware(isAuth)
   async saveMeeting(
     @Arg("data") data: MeetingInput,
-    @Arg("meetingId", () => String, { nullable: true }) meetingId: string
+    @Arg("meetingId", () => String, { nullable: true }) meetingId?: string
   ): Promise<MeetingRes> {
     const place = await Place.findOne(data.place);
     if (!place)
       return { errors: [{ field: "place", message: "place not found" }] };
-    if (!meetingId)
-      return { meeting: await Meeting.create({ ...data, place }).save() };
+    if (!meetingId) {
+      return {
+        meeting: await Meeting.create({
+          ...data,
+          place,
+          meetingDate: new Date(data.meetingDate),
+        }).save(),
+      };
+    }
+    const thereIsReservation = await Reservation.findOne({
+      meetingId,
+    });
+    if (thereIsReservation) {
+      return {
+        errors: [
+          {
+            field: "reservation",
+            message: "exist reservation whit this meeting",
+          },
+        ],
+      };
+    }
     const meeting = await Meeting.findOne({ id: meetingId });
     if (!meeting)
       return { errors: [{ field: "meetingId", message: "meeting not found" }] };
@@ -92,15 +123,27 @@ export class MeetingResolver {
     return update.raw[0];
   }
 
-  // @Mutation(() => MeetingRes)
-  // async saveMeeting(
-  //   @Arg("data") data: MeetingInput,
-  //   @Arg("meetingId", () => String, { nullable: true }) meetingId: string): Promise<MeetingRes> {
-  //   if (!meetingId)
-  //     return { meeting: await Meeting.create({ ...data }).save() }
-  //   const meeting = await Meeting.findOne({ id: meetingId })
-  //   if (!meeting)
-  //     return { errors: [{ field: "", message: "meeting not found" }] }
-  //   const update =
-  // }
+  @Mutation(() => MeetingRes)
+  @UseMiddleware(isAuth)
+  async deleteMeeting(
+    @Arg("meetingId", () => String, { nullable: true }) meetingId: string
+  ): Promise<MeetingRes> {
+    const thereIsReservation = await Reservation.findOne({
+      meetingId,
+    });
+    if (thereIsReservation)
+      return {
+        errors: [
+          {
+            field: "reservation",
+            message: "exist reservation whit this meeting",
+          },
+        ],
+      };
+    const deleteMeeting = await Meeting.delete(meetingId);
+    if (!deleteMeeting) {
+      return { errors: [{ field: "meetingId", message: "meeting not found" }] };
+    }
+    return { meeting: null };
+  }
 }
