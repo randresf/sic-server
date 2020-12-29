@@ -8,7 +8,7 @@ import {
   ObjectType,
   Query,
   Resolver,
-  Root
+  Root,
 } from "type-graphql";
 import { ErrorField } from "../types";
 import { User } from "../entities/User";
@@ -43,7 +43,7 @@ export class ReservationResolver {
     const user = await User.findOne({ id: data.userId });
     if (!user)
       return {
-        errors: [{ field: "userId", message: "informacion incorrecta" }]
+        errors: [{ field: "userId", message: "informacion incorrecta" }],
       };
     // check for previous reservations
     const userReservations = await Reservation.find({ userId: data.userId });
@@ -61,22 +61,22 @@ export class ReservationResolver {
         errors: [
           {
             field: "reservations",
-            message: "el usuario ya reservo esta reunion"
-          }
-        ]
+            message: "el usuario ya reservo esta reunion",
+          },
+        ],
       };
 
     const meeting = await Meeting.findOne({ id: data.meetingId });
     if (!meeting)
       return {
-        errors: [{ field: "meetingId", message: "informacion incorrecta" }]
+        errors: [{ field: "meetingId", message: "informacion incorrecta" }],
       };
 
     if (meeting.spots === 0)
       return {
         errors: [
-          { field: "meetingId", message: "no hay mas cupos disponibles" }
-        ]
+          { field: "meetingId", message: "no hay mas cupos disponibles" },
+        ],
       };
     // all good, save
 
