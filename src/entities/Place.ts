@@ -7,7 +7,7 @@ import {
   BeforeInsert,
   UpdateDateColumn,
   ManyToOne,
-  OneToMany
+  OneToMany,
 } from "typeorm";
 
 import moment from "moment";
@@ -41,7 +41,7 @@ export class Place extends BaseEntity {
 
   @Field()
   @Column({ default: true })
-  isActive: boolean;
+  isActive: string;
 
   @ManyToOne(() => Organization, (res) => res.places)
   owner!: Organization;

@@ -76,6 +76,9 @@ export class AdminInput {
 
 @InputType()
 export class PlaceInput {
+  @Field({ nullable: true })
+  id?: string;
+
   @Field()
   name!: string;
 
@@ -83,5 +86,5 @@ export class PlaceInput {
   address!: string;
 
   @Field({ nullable: true })
-  isActive?: boolean;
+  isActive!: string;
 }
