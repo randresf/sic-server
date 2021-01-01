@@ -9,6 +9,8 @@ import {
   Query,
   Resolver,
   Root,
+  Subscription,
+  PubSub
 } from "type-graphql";
 import { ErrorField } from "../types";
 import { User } from "../entities/User";
@@ -16,6 +18,8 @@ import createQRWithAppLink from "../utils/createQrWithAppLink";
 import { getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
 import moment from "moment";
+import { PubSubEngine } from "apollo-server-express";
+import { RESERVATION_ADDED } from "../constants";
 
 @ObjectType()
 class ReservationResponse {
@@ -33,17 +37,32 @@ class ReservationType {
   meetingId: string;
 }
 
+@ObjectType()
+class SubsNewReservation {
+  @Field()
+  meetingId: string;
+}
+
 @Resolver(Reservation)
 export class ReservationResolver {
+  @Subscription({ topics: RESERVATION_ADDED })
+  newReservation(
+    @Root() reservationPayload: SubsNewReservation
+  ): SubsNewReservation {
+    console.log("ws called");
+    return reservationPayload;
+  }
+
   @Mutation(() => ReservationResponse)
   async addReservation(
-    @Arg("data", () => ReservationType) data: ReservationType
+    @Arg("data", () => ReservationType) data: ReservationType,
+    @PubSub() pubSub: PubSubEngine
   ): Promise<ReservationResponse> {
     // check for user existence
     const user = await User.findOne({ id: data.userId });
     if (!user)
       return {
-        errors: [{ field: "userId", message: "informacion incorrecta" }],
+        errors: [{ field: "userId", message: "informacion incorrecta" }]
       };
     // check for previous reservations
     const userReservations = await Reservation.find({ userId: data.userId });
@@ -61,22 +80,22 @@ export class ReservationResolver {
         errors: [
           {
             field: "reservations",
-            message: "el usuario ya reservo esta reunion",
-          },
-        ],
+            message: "el usuario ya reservo esta reunion"
+          }
+        ]
       };
 
     const meeting = await Meeting.findOne({ id: data.meetingId });
     if (!meeting)
       return {
-        errors: [{ field: "meetingId", message: "informacion incorrecta" }],
+        errors: [{ field: "meetingId", message: "informacion incorrecta" }]
       };
 
     if (meeting.spots === 0)
       return {
         errors: [
-          { field: "meetingId", message: "no hay mas cupos disponibles" },
-        ],
+          { field: "meetingId", message: "no hay mas cupos disponibles" }
+        ]
       };
     // all good, save
 
@@ -103,6 +122,7 @@ export class ReservationResolver {
     // update spots
     meeting.spots = meeting.spots > 0 ? meeting.spots - 1 : 0;
     await meeting.save();
+    await pubSub.publish(RESERVATION_ADDED, { meetingId: data.meetingId });
     return { reservation: reserv.raw[0] };
   }
 

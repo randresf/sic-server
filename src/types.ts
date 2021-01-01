@@ -8,7 +8,13 @@ import "express-session";
 
 declare module "express-session" {
   interface SessionData {
-    adminId?: string;
+    admin?: {
+      id: string;
+      org: string;
+      firstName: string;
+      email: string;
+      lastName: string;
+    };
   }
 }
 

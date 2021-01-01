@@ -8,7 +8,7 @@ import {
   BeforeInsert,
   JoinColumn,
   UpdateDateColumn,
-  ManyToOne,
+  ManyToOne
 } from "typeorm";
 
 import moment from "moment";
@@ -45,7 +45,7 @@ export class Meeting extends BaseEntity {
   updatedAt = moment.utc().format();
 
   @Field()
-  @Column()
+  @Column({ default: false })
   isActive!: string;
 
   @OneToMany(() => Reservation, (res) => res.meeting)

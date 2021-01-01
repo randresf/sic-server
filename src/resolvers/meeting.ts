@@ -9,12 +9,12 @@ import {
   Query,
   Resolver,
   Root,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
-import { getConnection, Raw } from "typeorm";
+import { getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
 import { ErrorField, MyContext } from "../types";
-import moment from "moment";
+//import moment from "moment";
 import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
 import { Reservation } from "../entities/Reservation";
@@ -49,28 +49,28 @@ class MeetingRes {
 export class MeetingResolver {
   @Query(() => [Meeting])
   async meetings(@Ctx() { req }: MyContext): Promise<Meeting[]> {
-    const { adminId } = req.session;
-    const today = moment().subtract(1, "d");
-    const nextWeek = moment().add(7, "d");
-    const other = adminId
+    const { admin } = req.session;
+    // const today = moment().subtract(1, "d");
+    // const nextWeek = moment().add(7, "d");
+    const other = admin?.id
       ? {}
       : {
-          isActive: true,
-          meetingDate: Raw(
-            (alias) =>
-              `${alias} > '${today.format(
-                "YYYY-MM-DD"
-              )}' AND ${alias} < '${nextWeek.format("YYYY-MM-DD")}'`
-          ),
+          isActive: true
+          // meetingDate: Raw(
+          //   (alias) =>
+          //     `${alias} > '${today.format(
+          //       "YYYY-MM-DD"
+          //     )}' AND ${alias} < '${nextWeek.format("YYYY-MM-DD")}'`
+          // ),
         };
     const meeting = await Meeting.find({
       relations: ["place"],
       where: {
-        ...other,
+        ...other
       },
       order: {
-        meetingDate: "ASC",
-      },
+        meetingDate: "ASC"
+      }
     });
     return meeting;
   }
@@ -116,21 +116,21 @@ export class MeetingResolver {
         meeting: await Meeting.create({
           ...data,
           place,
-          meetingDate: new Date(data.meetingDate),
-        }).save(),
+          meetingDate: new Date(data.meetingDate)
+        }).save()
       };
     }
     const thereIsReservation = await Reservation.findOne({
-      meetingId,
+      meetingId
     });
     if (thereIsReservation) {
       return {
         errors: [
           {
             field: "reservation",
-            message: "exist reservation whit this meeting",
-          },
-        ],
+            message: "exist reservation whit this meeting"
+          }
+        ]
       };
     }
     const meeting = await Meeting.findOne({ id: meetingId });
@@ -152,16 +152,16 @@ export class MeetingResolver {
     @Arg("meetingId", () => String, { nullable: true }) meetingId: string
   ): Promise<MeetingRes> {
     const thereIsReservation = await Reservation.findOne({
-      meetingId,
+      meetingId
     });
     if (thereIsReservation)
       return {
         errors: [
           {
             field: "reservation",
-            message: "exist reservation whit this meeting",
-          },
-        ],
+            message: "exist reservation whit this meeting"
+          }
+        ]
       };
     const deleteMeeting = await Meeting.delete(meetingId);
     if (!deleteMeeting) {

@@ -1,4 +1,3 @@
-import { Organization } from "../entities/Organization";
 import { isAuth } from "../middleware/isAuth";
 import {
   Arg,
@@ -8,12 +7,12 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
 import { Place } from "../entities/Place";
 import { ErrorField, MyContext, PlaceInput } from "../types";
-import { Admin } from "../entities/Admin";
 import { getConnection } from "typeorm";
+import { Organization } from "../entities/Organization";
 
 @ObjectType()
 class PlaceResponse {
@@ -32,30 +31,32 @@ export class PlaceResolver {
     @Arg("data") data: PlaceInput,
     @Arg("placeId", () => String, { nullable: true }) placeId?: string
   ): Promise<PlaceResponse> {
-    const { adminId } = req.session;
-    const orgData = await Admin.findOne({
-      relations: ["organization"],
-      where: { id: adminId },
-    });
-    if (!orgData)
-      return {
-        errors: [
-          {
-            field: "organizationData",
-            message: "no existe organización para este usuario",
-          },
-        ],
-      };
-    const org = await Organization.findOne(orgData?.organization.id);
+    const { admin } = req.session;
+    const org = await Organization.findOne(admin?.org);
     if (!org)
       return {
         errors: [
-          { field: "organizationId", message: "organizacion no existe" },
-        ],
+          {
+            field: "organization",
+            message: "no existe organization"
+          }
+        ]
       };
+
     if (!placeId) {
-      return { place: [await Place.create({ ...data, owner: org }).save()] };
+      const { name, address, isActive } = data;
+      const place = await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(Place)
+        .values({ name, address, isActive, owner: org })
+        .returning("*")
+        .execute();
+      return {
+        place: [place.raw[0]]
+      };
     }
+
     const update = await getConnection()
       .createQueryBuilder()
       .update(Place)
@@ -68,37 +69,34 @@ export class PlaceResolver {
   @Query(() => PlaceResponse)
   @UseMiddleware(isAuth)
   async getUserPlaces(@Ctx() { req }: MyContext): Promise<PlaceResponse> {
-    const { adminId } = req.session;
-    const admin = await Admin.findOne({
-      relations: ["organization"],
-      where: { id: adminId },
-    });
+    const { admin } = req.session;
     let returning: PlaceResponse = {};
     try {
       const places = await Place.find({
         where: {
-          owner: admin?.organization,
+          owner: admin?.org
           // isActive: true || false,
-        },
+        }
       });
 
       returning = {
-        place: places,
+        place: places
       };
     } catch (err) {
       returning = {
         errors: [
           {
             field: "",
-            message: "Error al buscar los lugares relacionados con el usuario",
-          },
-        ],
+            message: "Error al buscar los lugares relacionados con el usuario"
+          }
+        ]
       };
     }
     return returning;
   }
 
   @Mutation(() => PlaceResponse)
+  @UseMiddleware(isAuth)
   async deletePlace(
     @Arg("placeId", () => String, { nullable: false }) placeId: string
   ): Promise<PlaceResponse> {

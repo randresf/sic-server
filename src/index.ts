@@ -8,6 +8,7 @@ import session from "express-session";
 import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
+//import { execute, subscribe } from "graphql";
 import { __isProd__, cookieName } from "./constants";
 import { MeetingResolver } from "./resolvers/meeting";
 import { QuestionResolver } from "./resolvers/questions";
@@ -16,6 +17,8 @@ import { UserResolver } from "./resolvers/user";
 import { AdminResolver } from "./resolvers/admin";
 import { PlaceResolver } from "./resolvers/place";
 import { MyContext } from "./types";
+//import { SubscriptionServer } from "subscriptions-transport-ws";
+import { createServer } from "http";
 // import { createReservationsLoader } from "./utils/createReservationsLoader";
 
 const port = process.env.PORT || 4000;
@@ -42,7 +45,7 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: "http://localhost:3000",
+      origin: "http://localhost:3001",
       credentials: true
     })
   );
@@ -86,9 +89,15 @@ const main = async () => {
   });
 
   apolloServer.applyMiddleware({ app, cors: false });
-
-  app.listen(port, () => {
-    console.log(`🚀 ready on port ${port} 🚀 `);
+  const server = createServer(app);
+  apolloServer.installSubscriptionHandlers(server);
+  server.listen(port, () => {
+    console.log(
+      `🚀 Server ready at http://localhost:${port}${apolloServer.graphqlPath}`
+    );
+    console.log(
+      `🚀 Subscriptions ready at ws://localhost:${port}${apolloServer.subscriptionsPath}`
+    );
   });
 };
 
