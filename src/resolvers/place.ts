@@ -57,9 +57,12 @@ export class PlaceResolver {
       };
     }
 
+
+    const { name, address, isActive } = data;
     const update = await getConnection()
       .createQueryBuilder()
       .update(Place)
+      .set({ name, address, isActive, owner: org })
       .where("id = :id", { id: placeId })
       .returning("*")
       .execute();
@@ -75,7 +78,6 @@ export class PlaceResolver {
       const places = await Place.find({
         where: {
           owner: admin?.org
-          // isActive: true || false,
         }
       });
 
