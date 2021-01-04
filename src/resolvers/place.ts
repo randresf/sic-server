@@ -103,7 +103,6 @@ export class PlaceResolver {
     @Arg("placeId", () => String, { nullable: false }) placeId: string
   ): Promise<PlaceResponse> {
     const deletePlace = await Place.delete(placeId);
-    console.log(deletePlace);
     if (deletePlace.affected === 0) {
       return { errors: [{ field: "PlaceId", message: "place not found" }] };
     }

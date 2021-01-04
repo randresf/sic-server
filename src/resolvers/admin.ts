@@ -30,7 +30,6 @@ export class AdminResolver {
   @Query(() => Admin, { nullable: true })
   heartBeat(@Ctx() { req }: MyContext) {
     const { admin } = req.session;
-    console.log(admin);
     if (!admin?.id) return null;
     return admin;
   }
