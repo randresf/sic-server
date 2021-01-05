@@ -81,6 +81,22 @@ export class AdminInput {
 }
 
 @InputType()
+export class userUpdateInput {
+  @Field()
+  firstName!: string;
+  @Field()
+  lastName!: string;
+  @Field()
+  phone!: number;
+  @Field()
+  email!: string;
+  @Field()
+  password?: string;
+  @Field()
+  newPassword?: string;
+}
+
+@InputType()
 export class PlaceInput {
   @Field({ nullable: true })
   id?: string;

@@ -7,9 +7,9 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
-import { AdminInput, ErrorField, MyContext } from "../types";
+import { AdminInput, ErrorField, MyContext, userUpdateInput } from "../types";
 import { verify as argonVerify, hash as argonHash } from "argon2";
 import { validateAdminData } from "../utils/validateAdminData";
 import { getConnection } from "typeorm";
@@ -42,7 +42,7 @@ export class AdminResolver {
   ): Promise<LoginResponse> {
     const admin = await Admin.findOne({
       relations: ["organization"],
-      where: { username }
+      where: { username },
     });
     if (admin && admin.isActive) {
       const isValid = await argonVerify(admin.password, password);
@@ -52,13 +52,13 @@ export class AdminResolver {
           org: admin.organization.id,
           email: admin.email,
           lastName: admin.lastName,
-          id: admin.id
+          id: admin.id,
         };
         return { admin };
       }
     }
     return {
-      errors: [{ field: "", message: "datos incorrectos o usuario inactivo" }]
+      errors: [{ field: "", message: "datos incorrectos o usuario inactivo" }],
     };
   }
 
@@ -77,8 +77,20 @@ export class AdminResolver {
     );
   }
 
-  @Mutation(() => LoginResponse)
+  @Query(() => Admin)
   @UseMiddleware(isAuth)
+  async getUserData(@Ctx() { req }: MyContext): Promise<Admin | undefined> {
+    const { admin } = req.session;
+    const userData = Admin.findOne({
+      where: { id: admin?.id },
+    });
+    if (!userData) {
+      return undefined;
+    }
+    return userData;
+  }
+
+  @Mutation(() => LoginResponse)
   async register(
     @Arg("options", () => AdminInput) options: AdminInput
   ): Promise<LoginResponse> {
@@ -86,7 +98,9 @@ export class AdminResolver {
     const org = await Organization.findOne(organizationId);
     if (!org)
       return {
-        errors: [{ field: "organizationId", message: "organizacion no existe" }]
+        errors: [
+          { field: "organizationId", message: "organizacion no existe" },
+        ],
       };
     const errors = validateAdminData(adminData);
     if (errors) return { errors };
@@ -101,7 +115,7 @@ export class AdminResolver {
         .values({
           ...adminData,
           organization: org,
-          password: hashedPwd
+          password: hashedPwd,
         })
         .returning("*")
         .execute();
@@ -109,10 +123,61 @@ export class AdminResolver {
     } catch (error) {
       if (error.code === "23505") {
         return {
-          errors: [{ field: "username", message: "username already taken" }]
+          errors: [{ field: "username", message: "username already taken" }],
         };
       }
     }
     return { admin };
+  }
+
+  @Mutation(() => LoginResponse)
+  @UseMiddleware(isAuth)
+  async updateUser(
+    @Ctx() { req }: MyContext,
+    @Arg("userData", () => userUpdateInput) userData: userUpdateInput
+  ): Promise<LoginResponse> {
+    const { admin } = req.session;
+    const { password, newPassword, ...data } = userData;
+    const adminData = await Admin.findOne({
+      relations: ["organization"],
+      where: { id: admin?.id },
+    });
+    if (adminData) {
+      if (password || newPassword) {
+        const isValid = await argonVerify(adminData.password, password || "");
+        if (!isValid) {
+          return {
+            errors: [{ field: "Password", message: "password is incorrect" }],
+          };
+        }
+        const hashedPwd = await argonHash(newPassword || "");
+        if (!hashedPwd) {
+          return {
+            errors: [
+              {
+                field: "Password",
+                message: "password dont correct, please change",
+              },
+            ],
+          };
+        }
+        const update = await getConnection()
+          .createQueryBuilder()
+          .update(Admin)
+          .set({ ...data, password: hashedPwd })
+          .where("id = :id", { id: admin?.id })
+          .returning("*")
+          .execute();
+        return update.raw[0];
+      }
+    }
+    const update = await getConnection()
+      .createQueryBuilder()
+      .update(Admin)
+      .set({ ...data })
+      .where("id = :id", { id: admin?.id })
+      .returning("*")
+      .execute();
+    return update.raw[0];
   }
 }
