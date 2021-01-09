@@ -4,14 +4,18 @@ import {
   Field,
   FieldResolver,
   InputType,
+  Int,
   Mutation,
   ObjectType,
+  PubSub,
+  PubSubEngine,
   Query,
   Resolver,
   Root,
+  Subscription,
   UseMiddleware
 } from "type-graphql";
-import { getConnection } from "typeorm";
+import { createQueryBuilder, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
 import { ErrorField, MyContext } from "../types";
 //import moment from "moment";
@@ -19,6 +23,8 @@ import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
 import { Reservation } from "../entities/Reservation";
 
+const MEETING_UPDATED = "meeting_updated";
+const NEW_MEETING = "new_meeting";
 @InputType()
 class MeetingInput {
   @Field({ nullable: true })
@@ -45,34 +51,64 @@ class MeetingRes {
   errors?: ErrorField[];
 }
 
+@ObjectType()
+class PaginatedMeetings {
+  @Field(() => [Meeting])
+  meetings: Meeting[];
+  @Field()
+  hasMore: Boolean;
+}
+
+@ObjectType()
+class MeetingUpdated {
+  @Field()
+  data: Meeting;
+}
+
 @Resolver(Meeting)
 export class MeetingResolver {
-  @Query(() => [Meeting])
-  async meetings(@Ctx() { req }: MyContext): Promise<Meeting[]> {
+  @Subscription({ topics: MEETING_UPDATED })
+  meetingUpdated(@Root() reservationPayload: MeetingUpdated): MeetingUpdated {
+    return reservationPayload;
+  }
+
+  @Subscription({ topics: NEW_MEETING })
+  newMeeting(@Root() reservationPayload: MeetingUpdated): MeetingUpdated {
+    return reservationPayload;
+  }
+
+  @Query(() => PaginatedMeetings)
+  async meetings(
+    @Ctx() { req }: MyContext,
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+  ): Promise<PaginatedMeetings> {
+    const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
     const { admin } = req.session;
-    // const today = moment().subtract(1, "d");
-    // const nextWeek = moment().add(7, "d");
-    const other = admin?.id
-      ? {}
-      : {
-          isActive: true
-          // meetingDate: Raw(
-          //   (alias) =>
-          //     `${alias} > '${today.format(
-          //       "YYYY-MM-DD"
-          //     )}' AND ${alias} < '${nextWeek.format("YYYY-MM-DD")}'`
-          // ),
-        };
-    const meeting = await Meeting.find({
-      relations: ["place"],
-      where: {
-        ...other
-      },
-      order: {
-        meetingDate: "ASC"
-      }
-    });
-    return meeting;
+    const qb = createQueryBuilder("meeting", "meeting")
+      .leftJoinAndSelect(
+        "meeting.place",
+        "place",
+        'place.id = meeting."placeId"'
+      )
+      .orderBy("meeting.createdAt", "ASC") // postgress need quotes
+      .take(realLimitPlusOne);
+
+    if (cursor) {
+      qb.where('meeting."createdAt" > :cursor', {
+        cursor: new Date(parseInt(cursor))
+      });
+      if (!admin?.id)
+        qb.andWhere('meeting."isActive" = :value', { value: true });
+    } else if (!admin?.id)
+      qb.where('meeting."isActive" = :value', { value: true });
+
+    const meetings = await qb.getMany();
+    return {
+      meetings: meetings.slice(0, realLimit) as Meeting[],
+      hasMore: meetings.length === realLimitPlusOne
+    };
   }
 
   @FieldResolver(() => Boolean)
@@ -106,18 +142,24 @@ export class MeetingResolver {
   @UseMiddleware(isAuth)
   async saveMeeting(
     @Arg("data") data: MeetingInput,
+    @PubSub() pubSub: PubSubEngine,
     @Arg("meetingId", () => String, { nullable: true }) meetingId?: string
   ): Promise<MeetingRes> {
     const place = await Place.findOne(data.place);
     if (!place)
       return { errors: [{ field: "place", message: "place not found" }] };
+    const { hasReservation, ...rest } = data;
     if (!meetingId) {
+      const meeting = await Meeting.create({
+        ...rest,
+        place,
+        meetingDate: new Date(data.meetingDate)
+      }).save();
+      await pubSub.publish(NEW_MEETING, {
+        data: { ...meeting, place, hasReservation: false }
+      });
       return {
-        meeting: await Meeting.create({
-          ...data,
-          place,
-          meetingDate: new Date(data.meetingDate)
-        }).save()
+        meeting
       };
     }
     const thereIsReservation = await Reservation.findOne({
@@ -139,11 +181,24 @@ export class MeetingResolver {
     const update = await getConnection()
       .createQueryBuilder()
       .update(Meeting)
-      .set({ ...data, place })
+      .set({ ...rest, place })
       .where("id = :id", { id: meetingId })
       .returning("*")
       .execute();
-    return update.raw[0];
+    const meetingUpdated = update.raw[0];
+    const subMeeting = {
+      ...meetingUpdated,
+      hasReservation: false,
+      place
+    };
+    await pubSub.publish(MEETING_UPDATED, {
+      data: subMeeting
+    });
+    if (String(meeting.isActive) !== String(meetingUpdated.isActive))
+      await pubSub.publish(NEW_MEETING, {
+        data: subMeeting
+      });
+    return { meeting: meetingUpdated };
   }
 
   @Mutation(() => MeetingRes)
