@@ -21,8 +21,8 @@ import { cookieName } from "../constants";
 class LoginResponse {
   @Field(() => [ErrorField], { nullable: true })
   errors?: ErrorField[];
-  @Field(() => Admin, { nullable: true })
-  admin?: Admin;
+  @Field(() => Admin || [Admin], { nullable: true })
+  admin?: Admin | Admin[] | null;
 }
 
 @Resolver(Admin)
@@ -77,6 +77,16 @@ export class AdminResolver {
     );
   }
 
+  //dont work
+  @Query(() => Admin)
+  @UseMiddleware(isAuth)
+  async getAdminsData(@Ctx() { req }: MyContext): Promise<Admin[]> {
+    const { admin } = req.session;
+    const admins = await Admin.find({ where: { organization: admin?.org } });
+    console.log(admins);
+    return admins;
+  }
+
   @Query(() => Admin)
   @UseMiddleware(isAuth)
   async getUserData(@Ctx() { req }: MyContext): Promise<Admin | undefined> {
@@ -91,21 +101,36 @@ export class AdminResolver {
   }
 
   @Mutation(() => LoginResponse)
+  @UseMiddleware(isAuth)
   async register(
-    @Arg("options", () => AdminInput) options: AdminInput
+    @Arg("options", () => AdminInput) options: AdminInput,
+    @Ctx() { req }: MyContext
   ): Promise<LoginResponse> {
-    const { organizationId, ...adminData } = options;
-    const org = await Organization.findOne(organizationId);
+    const { admin } = req.session;
+    const { ...adminData } = options;
+    const org = await Organization.findOne(admin?.org);
     if (!org)
       return {
         errors: [
           { field: "organizationId", message: "organizacion no existe" },
         ],
       };
+    const howManyAdmin = await Admin.find({
+      where: {
+        organization: admin?.org,
+      },
+    });
+    if (howManyAdmin.length >= 2) {
+      return {
+        errors: [
+          { field: "Admin", message: "supera el numero de admin permitidos" },
+        ],
+      };
+    }
     const errors = validateAdminData(adminData);
     if (errors) return { errors };
     const hashedPwd = await argonHash(options.password);
-    let admin;
+    let adminInfo;
     try {
       // User.create({opts}).save()
       const result = await getConnection()
@@ -119,7 +144,7 @@ export class AdminResolver {
         })
         .returning("*")
         .execute();
-      admin = result.raw[0];
+      adminInfo = result.raw[0];
     } catch (error) {
       if (error.code === "23505") {
         return {
@@ -127,7 +152,7 @@ export class AdminResolver {
         };
       }
     }
-    return { admin };
+    return { admin: adminInfo };
   }
 
   @Mutation(() => LoginResponse)

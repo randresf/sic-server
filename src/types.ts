@@ -76,8 +76,6 @@ export class AdminInput {
   username!: string;
   @Field()
   password!: string;
-  @Field()
-  organizationId?: string;
 }
 
 @InputType()
