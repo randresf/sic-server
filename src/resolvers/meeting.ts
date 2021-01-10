@@ -24,6 +24,7 @@ import { Place } from "../entities/Place";
 import { Reservation } from "../entities/Reservation";
 
 const MEETING_UPDATED = "meeting_updated";
+const MEETING_DELETED = "meeting_deleted";
 const NEW_MEETING = "new_meeting";
 @InputType()
 class MeetingInput {
@@ -65,6 +66,12 @@ class MeetingUpdated {
   data: Meeting;
 }
 
+@ObjectType()
+class MeetingDeleted {
+  @Field()
+  data: String;
+}
+
 @Resolver(Meeting)
 export class MeetingResolver {
   @Subscription({ topics: MEETING_UPDATED })
@@ -74,6 +81,11 @@ export class MeetingResolver {
 
   @Subscription({ topics: NEW_MEETING })
   newMeeting(@Root() reservationPayload: MeetingUpdated): MeetingUpdated {
+    return reservationPayload;
+  }
+
+  @Subscription({ topics: MEETING_DELETED })
+  meetingDelete(@Root() reservationPayload: MeetingDeleted): MeetingDeleted {
     return reservationPayload;
   }
 
@@ -168,7 +180,7 @@ export class MeetingResolver {
     if (thereIsReservation) {
       return {
         errors: [
-          {
+          { 
             field: "reservation",
             message: "exist reservation whit this meeting"
           }
@@ -204,6 +216,7 @@ export class MeetingResolver {
   @Mutation(() => MeetingRes)
   @UseMiddleware(isAuth)
   async deleteMeeting(
+    @PubSub() pubSub: PubSubEngine,
     @Arg("meetingId", () => String, { nullable: true }) meetingId: string
   ): Promise<MeetingRes> {
     const thereIsReservation = await Reservation.findOne({
@@ -222,6 +235,9 @@ export class MeetingResolver {
     if (!deleteMeeting) {
       return { errors: [{ field: "meetingId", message: "meeting not found" }] };
     }
+    await pubSub.publish(MEETING_DELETED, {
+      data: meetingId
+    });
     return { meeting: null };
   }
 }
