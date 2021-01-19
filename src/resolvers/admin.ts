@@ -80,9 +80,15 @@ export class AdminResolver {
   //dont work
   @Query(() => Admin)
   @UseMiddleware(isAuth)
-  async getAdminsData(@Ctx() { req }: MyContext): Promise<Admin[]> {
+  async getAdminsData(@Ctx() { req }: MyContext): Promise<Admin[] | undefined> {
     const { admin } = req.session;
-    const admins = await Admin.find({ where: { organization: admin?.org } });
+
+    const admins = await getConnection()
+      .createQueryBuilder()
+      .select()
+      .from(Admin, "admin")
+      .where("admin.organizationId = :org", { org: admin?.org })
+      .execute();
     console.log(admins);
     return admins;
   }
@@ -94,6 +100,7 @@ export class AdminResolver {
     const userData = Admin.findOne({
       where: { id: admin?.id },
     });
+    console.log(userData);
     if (!userData) {
       return undefined;
     }
