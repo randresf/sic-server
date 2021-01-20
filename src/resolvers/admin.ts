@@ -78,7 +78,7 @@ export class AdminResolver {
   }
 
   //dont work
-  @Query(() => Admin)
+  @Query(() => [Admin])
   @UseMiddleware(isAuth)
   async getAdminsData(@Ctx() { req }: MyContext): Promise<Admin[] | undefined> {
     const { admin } = req.session;
@@ -88,8 +88,11 @@ export class AdminResolver {
       .select()
       .from(Admin, "admin")
       .where("admin.organizationId = :org", { org: admin?.org })
+      // .andWhere("admin.id <> :id", { id: admin?.id })
       .execute();
-    console.log(admins);
+    if (!admins) {
+      return undefined;
+    }
     return admins;
   }
 
