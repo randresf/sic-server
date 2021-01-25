@@ -77,7 +77,6 @@ export class AdminResolver {
     );
   }
 
-  //dont work
   @Query(() => [Admin])
   @UseMiddleware(isAuth)
   async getAdminsData(@Ctx() { req }: MyContext): Promise<Admin[] | undefined> {
@@ -88,7 +87,6 @@ export class AdminResolver {
       .select()
       .from(Admin, "admin")
       .where("admin.organizationId = :org", { org: admin?.org })
-      // .andWhere("admin.id <> :id", { id: admin?.id })
       .execute();
     if (!admins) {
       return undefined;
@@ -111,7 +109,7 @@ export class AdminResolver {
   }
 
   @Mutation(() => LoginResponse)
-  @UseMiddleware(isAuth)
+  //@UseMiddleware(isAuth)
   async register(
     @Arg("options", () => AdminInput) options: AdminInput,
     @Ctx() { req }: MyContext
