@@ -180,7 +180,7 @@ export class MeetingResolver {
     if (thereIsReservation) {
       return {
         errors: [
-          { 
+          {
             field: "reservation",
             message: "exist reservation whit this meeting"
           }
