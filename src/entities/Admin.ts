@@ -3,38 +3,47 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  OneToMany,
   BaseEntity,
   BeforeInsert,
-  JoinColumn,
   UpdateDateColumn,
   ManyToOne
 } from "typeorm";
 
 import moment from "moment";
-import { Reservation } from "./Reservation";
 import { v4 } from "uuid";
 import { Field, ObjectType } from "type-graphql";
-import { Place } from "./Place";
+import { Organization } from "./Organization";
 
 @ObjectType()
 @Entity()
-export class Meeting extends BaseEntity {
+export class Admin extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
   @Field()
   @Column()
-  title!: string;
+  firstName!: string;
 
   @Field()
   @Column()
-  spots!: number;
+  lastName!: string;
 
-  @Field(() => Date)
+  @Field()
+  @Column({ type: "bigint" })
+  phone!: number;
+
+  @Field()
   @Column()
-  meetingDate!: Date;
+  email!: string;
+
+  @Field()
+  @Column({ unique: true })
+  username!: string;
+
+  @Field(() => String)
+  @Column()
+  password!: string;
 
   @Field(() => String)
   @CreateDateColumn()
@@ -45,15 +54,11 @@ export class Meeting extends BaseEntity {
   updatedAt = moment.utc().format();
 
   @Field()
-  @Column({ default: false })
-  isActive!: string;
+  @Column({ default: true })
+  isActive: boolean;
 
-  @OneToMany(() => Reservation, (res) => res.meeting)
-  @JoinColumn({ referencedColumnName: "meetingId" })
-  reservations: Reservation[];
-
-  @ManyToOne(() => Place, (res) => res.meetings)
-  place?: Place;
+  @ManyToOne(() => Organization, (res) => res.admins)
+  organization!: Organization;
 
   @BeforeInsert()
   addId() {

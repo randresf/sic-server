@@ -7,9 +7,9 @@ import {
   ObjectType,
   Query,
   Resolver,
-  Root,
+  Root
 } from "type-graphql";
-import { ErrorField, UserInput } from "./types";
+import { ErrorField, UserInput } from "../types";
 import { validateRegister } from "../utils/validateRegister";
 import { Reservation } from "../entities/Reservation";
 import { InputType } from "type-graphql";
@@ -90,7 +90,7 @@ export class UserResolver {
           { ...data }
         );
         returning = {
-          user: { id: userId, ...user.raw[0] },
+          user: { id: userId, ...user.raw[0] }
         };
       } else {
         returning = { user: await User.create({ ...data }).save() };
@@ -113,11 +113,11 @@ export class UserResolver {
       await User.update({ id: userId }, { ...contactData });
 
       returning = {
-        userId,
+        userId
       };
     } catch (err) {
       returning = {
-        errors: [{ field: "", message: "Error al actualizar el usaurio" }],
+        errors: [{ field: "", message: "Error al actualizar el usaurio" }]
       };
     }
     return returning;
