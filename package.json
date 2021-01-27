@@ -5,7 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && env-cmd node dist/index.js",
+    "start": "tsc && node dist/index.js",
     "watch": "tsc -w",
     "dev": "env-cmd nodemon",
     "create:migration": "npx typeorm  migration:create"
