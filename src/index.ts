@@ -22,24 +22,31 @@ import { createServer } from "http";
 // import { createReservationsLoader } from "./utils/createReservationsLoader";
 
 const port = process.env.PORT || 4000;
+const DBPROPS = {
+  type: "postgres",
+  logging: !__isProd__,
+  synchronize: true,
+  entities: [path.join(__dirname, "./entities/*")],
+  migrations: [path.join(__dirname, "./migrations/*")]
+};
 
 const main = async () => {
-  const conn = await createConnection({
-    type: "postgres",
-    database: process.env.DB_NAME,
-    username: process.env.PG_USERNAME,
-    password: process.env.PG_PWD || undefined,
-    logging: !__isProd__,
-    synchronize: true,
-    entities: [path.join(__dirname, "./entities/*")],
-    migrations: [path.join(__dirname, "./migrations/*")]
-  });
+  const conectionPorps = __isProd__
+    ? { url: process.env.DATABASE_URL, ...DBPROPS }
+    : {
+        ...DBPROPS,
+        database: process.env.DB_NAME,
+        username: process.env.PG_USERNAME,
+        password: process.env.PG_PWD || undefined
+      };
+
+  const conn = await createConnection(conectionPorps as any);
 
   //await Meeting.delete({})
   await conn.runMigrations();
 
   const ReduisStore = connecRedis(session);
-  const redisClient = new Redis();
+  const redisClient = __isProd__ ? process.env.REDIS_URL : new Redis();
 
   const app = express();
 
