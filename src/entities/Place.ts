@@ -31,9 +31,9 @@ export class Place extends BaseEntity {
   @Column()
   address!: string;
 
-  @Field(() => String)
-  @Column()
-  jsonAddress!: string;
+  @Field(() => String, {nullable: true})
+  @Column({nullable: true})
+  jsonAddress?: string;
 
   @Field(() => String)
   @CreateDateColumn()
