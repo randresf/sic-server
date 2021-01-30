@@ -7,7 +7,7 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
 import { Place } from "../entities/Place";
 import { ErrorField, MyContext, PlaceInput } from "../types";
@@ -38,25 +38,24 @@ export class PlaceResolver {
         errors: [
           {
             field: "organization",
-            message: "no existe organization"
-          }
-        ]
+            message: "no existe organization",
+          },
+        ],
       };
 
     if (!placeId) {
-      const { name, address, isActive } = data;
+      const { name, address, jsonAddress, isActive } = data;
       const place = await getConnection()
         .createQueryBuilder()
         .insert()
         .into(Place)
-        .values({ name, address, isActive, owner: org })
+        .values({ name, address, jsonAddress, isActive, owner: org })
         .returning("*")
         .execute();
       return {
-        place: [place.raw[0]]
+        place: [place.raw[0]],
       };
     }
-
 
     const { name, address, isActive } = data;
     const update = await getConnection()
@@ -77,21 +76,21 @@ export class PlaceResolver {
     try {
       const places = await Place.find({
         where: {
-          owner: admin?.org
-        }
+          owner: admin?.org,
+        },
       });
 
       returning = {
-        place: places
+        place: places,
       };
     } catch (err) {
       returning = {
         errors: [
           {
             field: "",
-            message: "Error al buscar los lugares relacionados con el usuario"
-          }
-        ]
+            message: "Error al buscar los lugares relacionados con el usuario",
+          },
+        ],
       };
     }
     return returning;
