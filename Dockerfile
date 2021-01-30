@@ -7,6 +7,7 @@ RUN yarn install --production
 COPY ./dist .
 
 ENV NODE_ENV production
+ENV REACT_APP_URL aforo.dev
 
 EXPOSE 80
 

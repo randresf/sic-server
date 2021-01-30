@@ -54,7 +54,7 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: ["http://localhost:3000", process.env.REACT_APP_URL || ""],
+      origin: ["localhost:3000", process.env.REACT_APP_URL || ""],
       credentials: true
     })
   );
