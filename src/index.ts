@@ -46,7 +46,9 @@ const main = async () => {
   await conn.runMigrations();
 
   const ReduisStore = connecRedis(session);
-  const redisClient = __isProd__ ? process.env.REDIS_URL : new Redis();
+  const redisClient = __isProd__
+    ? new Redis(process.env.REDIS_URL)
+    : new Redis();
 
   const app = express();
 
