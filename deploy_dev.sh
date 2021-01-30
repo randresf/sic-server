@@ -1,4 +1,4 @@
-!# /bin/bash
+#! /bin/bash
 yarn build
 docker build -t randresf2/dev-server:latest .
 docker push randresf2/dev-server:latest

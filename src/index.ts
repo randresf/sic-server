@@ -54,11 +54,7 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: [
-        "localhost:3000",
-        "sic-fviz2.ondigitalocean.app",
-        process.env.REACT_APP_URL || ""
-      ],
+      origin: ["localhost:3000", "aforo.dev", process.env.REACT_APP_URL || ""],
       credentials: true
     })
   );
