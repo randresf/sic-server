@@ -32,6 +32,10 @@ export class Place extends BaseEntity {
   address!: string;
 
   @Field(() => String)
+  @Column()
+  jsonAddress!: string;
+
+  @Field(() => String)
   @CreateDateColumn()
   createdAt = moment.utc().format();
 
