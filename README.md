@@ -18,3 +18,11 @@ server in nodejs for the SIC app
 - run `yarn install`
 - run `yarn watch` to watch typescript changes and update the `dist` folder
 - run `yarn dev` to run the app from `dist`
+
+## Docker
+
+you can setup the app to run in docker
+
+# make suer you are inside the repo root folder
+
+`docker build -t ${CUSTOM_NAME}/${container}:${tagNumber} .`
