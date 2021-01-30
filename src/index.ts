@@ -54,11 +54,7 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: [
-        "localhost:3000",
-        "https://api.aforo.dev/graphql",
-        process.env.REACT_APP_URL || ""
-      ],
+      origin: ["localhost:3000", /aforo\.dev$/],
       credentials: true
     })
   );
