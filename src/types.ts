@@ -103,6 +103,9 @@ export class PlaceInput {
   name!: string;
 
   @Field()
+  jsonAddress!: string;
+
+  @Field()
   address!: string;
 
   @Field({ nullable: true })
