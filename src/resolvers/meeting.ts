@@ -13,12 +13,12 @@ import {
   Resolver,
   Root,
   Subscription,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
 import { createQueryBuilder, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
 import { ErrorField, MyContext } from "../types";
-//import moment from "moment";
+import moment from "moment";
 import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
 import { Reservation } from "../entities/Reservation";
@@ -97,6 +97,8 @@ export class MeetingResolver {
   ): Promise<PaginatedMeetings> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
+    const today = moment().subtract(1, "d");
+    const nextWeek = moment().add(7, "d");
     const { admin } = req.session;
     const qb = createQueryBuilder("meeting", "meeting")
       .leftJoinAndSelect(
@@ -109,17 +111,27 @@ export class MeetingResolver {
 
     if (cursor) {
       qb.where('meeting."createdAt" > :cursor', {
-        cursor: new Date(parseInt(cursor))
+        cursor: new Date(parseInt(cursor)),
       });
       if (!admin?.id)
         qb.andWhere('meeting."isActive" = :value', { value: true });
     } else if (!admin?.id)
       qb.where('meeting."isActive" = :value', { value: true });
 
+    if (!admin?.id) {
+      qb.where(
+        'meeting."meetingDate" > :today AND meeting."meetingDate" < :nextWeek',
+        {
+          today: today.utc(),
+          nextWeek: nextWeek.utc(),
+        }
+      );
+    }
+
     const meetings = await qb.getMany();
     return {
       meetings: meetings.slice(0, realLimit) as Meeting[],
-      hasMore: meetings.length === realLimitPlusOne
+      hasMore: meetings.length === realLimitPlusOne,
     };
   }
 
@@ -165,26 +177,26 @@ export class MeetingResolver {
       const meeting = await Meeting.create({
         ...rest,
         place,
-        meetingDate: new Date(data.meetingDate)
+        meetingDate: new Date(data.meetingDate),
       }).save();
       await pubSub.publish(NEW_MEETING, {
-        data: { ...meeting, place, hasReservation: false }
+        data: { ...meeting, place, hasReservation: false },
       });
       return {
-        meeting
+        meeting,
       };
     }
     const thereIsReservation = await Reservation.findOne({
-      meetingId
+      meetingId,
     });
     if (thereIsReservation) {
       return {
         errors: [
           {
             field: "reservation",
-            message: "exist reservation whit this meeting"
-          }
-        ]
+            message: "exist reservation whit this meeting",
+          },
+        ],
       };
     }
     const meeting = await Meeting.findOne({ id: meetingId });
@@ -201,14 +213,14 @@ export class MeetingResolver {
     const subMeeting = {
       ...meetingUpdated,
       hasReservation: false,
-      place
+      place,
     };
     await pubSub.publish(MEETING_UPDATED, {
-      data: subMeeting
+      data: subMeeting,
     });
     if (String(meeting.isActive) !== String(meetingUpdated.isActive))
       await pubSub.publish(NEW_MEETING, {
-        data: subMeeting
+        data: subMeeting,
       });
     return { meeting: meetingUpdated };
   }
@@ -220,23 +232,23 @@ export class MeetingResolver {
     @Arg("meetingId", () => String, { nullable: true }) meetingId: string
   ): Promise<MeetingRes> {
     const thereIsReservation = await Reservation.findOne({
-      meetingId
+      meetingId,
     });
     if (thereIsReservation)
       return {
         errors: [
           {
             field: "reservation",
-            message: "exist reservation whit this meeting"
-          }
-        ]
+            message: "exist reservation whit this meeting",
+          },
+        ],
       };
     const deleteMeeting = await Meeting.delete(meetingId);
     if (!deleteMeeting) {
       return { errors: [{ field: "meetingId", message: "meeting not found" }] };
     }
     await pubSub.publish(MEETING_DELETED, {
-      data: meetingId
+      data: meetingId,
     });
     return { meeting: null };
   }
