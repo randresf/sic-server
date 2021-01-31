@@ -21,15 +21,15 @@ jobs:
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-
-      - name: Executing remote command
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          USERNAME: ${{ secrets.USERNAME }}
-          PORT: ${{ secrets.PORT }}
-          PASSWORD: ${{ secrets.SSH_KEY }}
-          script: cd dev/server && git pull && yarn install && yarn build && pm2 restart ecosystem.config.js --only dev-dnsic --env dev
+    - uses: actions/checkout@v2
+      with:
+          fetch-depth: 0
+    - id: deploy
+      name: Deploy to dokku
+      uses: idoberko2/dokku-deploy-github-action@v1
+      with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_DOKKU }}
+          dokku-host: ${{ secrets.DROPLET_DOKKU }}
+          app-name: 'aforoserver'
