@@ -7,7 +7,7 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
 import { AdminInput, ErrorField, MyContext, userUpdateInput } from "../types";
 import { verify as argonVerify, hash as argonHash } from "argon2";
@@ -42,7 +42,7 @@ export class AdminResolver {
   ): Promise<LoginResponse> {
     const admin = await Admin.findOne({
       relations: ["organization"],
-      where: { username },
+      where: { username }
     });
     if (admin && admin.isActive) {
       const isValid = await argonVerify(admin.password, password);
@@ -52,13 +52,13 @@ export class AdminResolver {
           org: admin.organization.id,
           email: admin.email,
           lastName: admin.lastName,
-          id: admin.id,
+          id: admin.id
         };
         return { admin };
       }
     }
     return {
-      errors: [{ field: "", message: "datos incorrectos o usuario inactivo" }],
+      errors: [{ field: "", message: "datos incorrectos o usuario inactivo" }]
     };
   }
 
@@ -99,9 +99,8 @@ export class AdminResolver {
   async getUserData(@Ctx() { req }: MyContext): Promise<Admin | undefined> {
     const { admin } = req.session;
     const userData = Admin.findOne({
-      where: { id: admin?.id },
+      where: { id: admin?.id }
     });
-    console.log(userData);
     if (!userData) {
       return undefined;
     }
@@ -109,7 +108,7 @@ export class AdminResolver {
   }
 
   @Mutation(() => LoginResponse)
-  //@UseMiddleware(isAuth)
+  @UseMiddleware(isAuth)
   async register(
     @Arg("options", () => AdminInput) options: AdminInput,
     @Ctx() { req }: MyContext
@@ -119,20 +118,18 @@ export class AdminResolver {
     const org = await Organization.findOne(admin?.org);
     if (!org)
       return {
-        errors: [
-          { field: "organizationId", message: "organizacion no existe" },
-        ],
+        errors: [{ field: "organizationId", message: "organizacion no existe" }]
       };
     const howManyAdmin = await Admin.find({
       where: {
-        organization: admin?.org,
-      },
+        organization: admin?.org
+      }
     });
     if (howManyAdmin.length >= 2) {
       return {
         errors: [
-          { field: "Admin", message: "supera el numero de admin permitidos" },
-        ],
+          { field: "Admin", message: "supera el numero de admin permitidos" }
+        ]
       };
     }
     const errors = validateAdminData(adminData);
@@ -148,7 +145,7 @@ export class AdminResolver {
         .values({
           ...adminData,
           organization: org,
-          password: hashedPwd,
+          password: hashedPwd
         })
         .returning("*")
         .execute();
@@ -156,7 +153,7 @@ export class AdminResolver {
     } catch (error) {
       if (error.code === "23505") {
         return {
-          errors: [{ field: "username", message: "username already taken" }],
+          errors: [{ field: "username", message: "username already taken" }]
         };
       }
     }
@@ -173,14 +170,14 @@ export class AdminResolver {
     const { password, newPassword, ...data } = userData;
     const adminData = await Admin.findOne({
       relations: ["organization"],
-      where: { id: admin?.id },
+      where: { id: admin?.id }
     });
     if (adminData) {
       if (password || newPassword) {
         const isValid = await argonVerify(adminData.password, password || "");
         if (!isValid) {
           return {
-            errors: [{ field: "Password", message: "password is incorrect" }],
+            errors: [{ field: "Password", message: "password is incorrect" }]
           };
         }
         const hashedPwd = await argonHash(newPassword || "");
@@ -189,9 +186,9 @@ export class AdminResolver {
             errors: [
               {
                 field: "Password",
-                message: "password dont correct, please change",
-              },
-            ],
+                message: "password dont correct, please change"
+              }
+            ]
           };
         }
         const update = await getConnection()
