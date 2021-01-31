@@ -27,6 +27,14 @@ export class Organization extends BaseEntity {
   @Column()
   name!: string;
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  logo: string;
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  address: string;
+
   @Field(() => String)
   @CreateDateColumn()
   createdAt = moment.utc().format();

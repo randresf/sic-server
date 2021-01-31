@@ -78,6 +78,16 @@ export class AdminInput {
   password!: string;
 }
 
+@ObjectType()
+export class AdminOutput {
+  @Field()
+  id!: string;
+  @Field()
+  username!: string;
+  @Field()
+  password!: string;
+}
+
 @InputType()
 export class userUpdateInput {
   @Field()

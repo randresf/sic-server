@@ -19,6 +19,7 @@ import { PlaceResolver } from "./resolvers/place";
 import { MyContext } from "./types";
 //import { SubscriptionServer } from "subscriptions-transport-ws";
 import { createServer } from "http";
+import { OrganizationResolver } from "./resolvers/organization";
 // import { createReservationsLoader } from "./utils/createReservationsLoader";
 
 const port = process.env.PORT || 4000;
@@ -82,7 +83,8 @@ const main = async () => {
       UserResolver,
       ReservationResolver,
       AdminResolver,
-      PlaceResolver
+      PlaceResolver,
+      OrganizationResolver
     ],
     validate: false
   });
