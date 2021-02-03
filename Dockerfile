@@ -8,6 +8,7 @@ COPY ./dist .
 
 ENV NODE_ENV production
 ENV REACT_APP_URL aforo.dev
+ENV SUPERADMIN_KEY 74PHQITMUT
 
 EXPOSE 80
 
