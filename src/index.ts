@@ -51,7 +51,7 @@ const main = async () => {
   const redisClient = __isProd__
     ? new Redis(process.env.REDIS_URL)
     : new Redis();
-  console.log(redisClient);
+
   const app = express();
 
   app.use(
@@ -60,6 +60,8 @@ const main = async () => {
       credentials: true,
     })
   );
+
+  if (__isProd__) app.set("trust proxy", 1);
 
   app.use(
     session({
