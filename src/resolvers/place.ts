@@ -1,4 +1,3 @@
-import { isAuth } from "../middleware/isAuth";
 import {
   Arg,
   Ctx,
@@ -7,12 +6,13 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
-import { Place } from "../entities/Place";
-import { ErrorField, MyContext, PlaceInput } from "../types";
 import { getConnection } from "typeorm";
 import { Organization } from "../entities/Organization";
+import { Place } from "../entities/Place";
+import { isAuth } from "../middleware/isAuth";
+import { ErrorField, MyContext, PlaceInput } from "../types";
 
 @ObjectType()
 class PlaceResponse {
@@ -38,9 +38,9 @@ export class PlaceResolver {
         errors: [
           {
             field: "organization",
-            message: "no existe organization",
-          },
-        ],
+            message: "no existe organization"
+          }
+        ]
       };
 
     if (!placeId) {
@@ -53,7 +53,7 @@ export class PlaceResolver {
         .returning("*")
         .execute();
       return {
-        place: [place.raw[0]],
+        place: [place.raw[0]]
       };
     }
 
@@ -76,21 +76,21 @@ export class PlaceResolver {
     try {
       const places = await Place.find({
         where: {
-          owner: admin?.org,
-        },
+          owner: admin?.org
+        }
       });
 
       returning = {
-        place: places,
+        place: places
       };
     } catch (err) {
       returning = {
         errors: [
           {
             field: "",
-            message: "Error al buscar los lugares relacionados con el usuario",
-          },
-        ],
+            message: err.detail
+          }
+        ]
       };
     }
     return returning;

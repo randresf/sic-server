@@ -1,4 +1,4 @@
-import { Admin } from "../entities/Admin";
+import { hash as argonHash, verify as argonVerify } from "argon2";
 import {
   Arg,
   Ctx,
@@ -9,13 +9,13 @@ import {
   Resolver,
   UseMiddleware
 } from "type-graphql";
-import { AdminInput, ErrorField, MyContext, userUpdateInput } from "../types";
-import { verify as argonVerify, hash as argonHash } from "argon2";
-import { validateAdminData } from "../utils/validateAdminData";
 import { getConnection } from "typeorm";
+import { cookieName } from "../constants";
+import { Admin } from "../entities/Admin";
 import { Organization } from "../entities/Organization";
 import { isAuth } from "../middleware/isAuth";
-import { cookieName } from "../constants";
+import { AdminInput, ErrorField, MyContext, userUpdateInput } from "../types";
+import { validateAdminData } from "../utils/validateAdminData";
 
 @ObjectType()
 class LoginResponse {
@@ -28,10 +28,23 @@ class LoginResponse {
 @Resolver(Admin)
 export class AdminResolver {
   @Query(() => Admin, { nullable: true })
-  heartBeat(@Ctx() { req }: MyContext) {
+  async heartBeat(@Ctx() { req }: MyContext) {
     const { admin } = req.session;
     if (!admin?.id) return null;
-    return admin;
+    const updatedAdmin = await Admin.findOne({
+      relations: ["organization"],
+      where: { id: admin.id }
+    });
+    if (!updatedAdmin) return null;
+    const returning = {
+      firstName: updatedAdmin.firstName,
+      org: updatedAdmin.organization.id,
+      email: updatedAdmin.email,
+      lastName: updatedAdmin.lastName,
+      id: updatedAdmin.id
+    };
+    req.session.admin = returning;
+    return returning;
   }
 
   @Mutation(() => LoginResponse)
@@ -96,7 +109,7 @@ export class AdminResolver {
 
   @Query(() => Admin)
   @UseMiddleware(isAuth)
-  async getUserData(@Ctx() { req }: MyContext): Promise<Admin | undefined> {
+  async getAdminData(@Ctx() { req }: MyContext): Promise<Admin | undefined> {
     const { admin } = req.session;
     const userData = Admin.findOne({
       where: { id: admin?.id }
@@ -162,7 +175,7 @@ export class AdminResolver {
 
   @Mutation(() => LoginResponse)
   @UseMiddleware(isAuth)
-  async updateUser(
+  async updateAdmin(
     @Ctx() { req }: MyContext,
     @Arg("userData", () => userUpdateInput) userData: userUpdateInput
   ): Promise<LoginResponse> {
