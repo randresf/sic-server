@@ -1,20 +1,19 @@
 // this entity would be the top in the hierarchy
+import moment from "moment";
+import { Field, ObjectType } from "type-graphql";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  OneToMany,
   BaseEntity,
   BeforeInsert,
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
   UpdateDateColumn
 } from "typeorm";
-
-import moment from "moment";
 import { v4 } from "uuid";
-import { Field, ObjectType } from "type-graphql";
-import { Place } from "./Place";
 import { Admin } from "./Admin";
+import { Place } from "./Place";
 
 @ObjectType()
 @Entity()
@@ -24,7 +23,7 @@ export class Organization extends BaseEntity {
   id!: string;
 
   @Field()
-  @Column()
+  @Column({ unique: true })
   name!: string;
 
   @Field({ nullable: true })

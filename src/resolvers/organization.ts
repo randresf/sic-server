@@ -1,16 +1,17 @@
-import { Admin } from "../entities/Admin";
-import { AdminOutput, ErrorField } from "../types";
+import Str from "@supercharge/strings";
+import { hash as argonHash } from "argon2";
 import {
   Arg,
   Field,
   InputType,
   Mutation,
   ObjectType,
-  Resolver
+  Query,
+  Resolver,
 } from "type-graphql";
+import { Admin } from "../entities/Admin";
 import { Organization } from "../entities/Organization";
-import Str from "@supercharge/strings";
-import { hash as argonHash } from "argon2";
+import { AdminOutput, ErrorField } from "../types";
 
 @InputType()
 class AddOrgType {
@@ -18,6 +19,8 @@ class AddOrgType {
   name: string;
   @Field()
   username: string;
+  @Field()
+  email: string;
   @Field({ nullable: true })
   logo?: string;
   @Field({ nullable: true })
@@ -42,6 +45,22 @@ class OrgResponse {
   errors?: ErrorField[];
 }
 
+@ObjectType()
+class OrgListResponse {
+  @Field(() => [Organization] || Organization, { nullable: true })
+  organization?: Organization[] | Organization;
+  @Field(() => [ErrorField], { nullable: true })
+  errors?: ErrorField[];
+}
+
+@ObjectType()
+class OrgNameResponse {
+  @Field(() => Organization, { nullable: true })
+  organization?: Organization;
+  @Field(() => [ErrorField], { nullable: true })
+  errors?: ErrorField[];
+}
+
 @Resolver(Organization)
 export class OrganizationResolver {
   @Mutation(() => OrgResponse)
@@ -54,50 +73,69 @@ export class OrganizationResolver {
         errors: [
           {
             field: "superadminKey",
-            message: "not authenticated"
-          }
-        ]
+            message: "not authenticated",
+          },
+        ],
       };
-    const { username, ...orgData } = data;
+    const { username, email, ...orgData } = data;
     try {
       const org = (await Organization.insert(orgData)).raw[0];
-      const password = Str.random(5);
+      const password = Str.random(8);
       const hashedPwd = await argonHash(password);
       const defaultAdmin = {
         firstName: Str.random(5),
-
         lastName: Str.random(5),
-
         phone: 1234567,
-
-        email: `${Str.random(5)}@email.com`,
-
+        email,
         username,
-
-        password: hashedPwd
+        password: hashedPwd,
       };
       const adminInsert = (
         await Admin.insert({
           ...defaultAdmin,
-          organization: org
+          organization: org,
         })
       ).raw[0];
 
       return {
         org: {
-          ...org,
-          defaultAdmin: { id: adminInsert.id, username, password }
-        }
+          id: org.id,
+          name: orgData.name,
+          defaultAdmin: { id: adminInsert.id, username, password },
+        },
       };
     } catch (e) {
       return {
         errors: [
           {
             field: "error",
-            message: e
-          }
-        ]
+            message: e.detail,
+          },
+        ],
       };
     }
+  }
+
+  @Query(() => OrgListResponse)
+  async getOrganizations(@Arg("id") id?: string): Promise<OrgListResponse> {
+    const org = id ? await Organization.findOne(id) : await Organization.find();
+    return { organization: org };
+  }
+
+  @Query(() => OrgNameResponse)
+  async getOrganizationByName(
+    @Arg("orgName") orgName: string
+  ): Promise<OrgNameResponse> {
+    const org = await Organization.findOne({ name: orgName });
+    if (!org)
+      return {
+        errors: [
+          {
+            field: "orgName",
+            message: "org no existe",
+          },
+        ],
+      };
+    return { organization: org };
   }
 }

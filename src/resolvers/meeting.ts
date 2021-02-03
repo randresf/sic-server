@@ -1,3 +1,4 @@
+import moment from "moment";
 import {
   Arg,
   Ctx,
@@ -17,11 +18,10 @@ import {
 } from "type-graphql";
 import { createQueryBuilder, getConnection } from "typeorm";
 import { Meeting } from "../entities/Meeting";
-import { ErrorField, MyContext } from "../types";
-import moment from "moment";
-import { isAuth } from "../middleware/isAuth";
 import { Place } from "../entities/Place";
 import { Reservation } from "../entities/Reservation";
+import { isAuth } from "../middleware/isAuth";
+import { ErrorField, MyContext } from "../types";
 
 const MEETING_UPDATED = "meeting_updated";
 const MEETING_DELETED = "meeting_deleted";
@@ -95,17 +95,22 @@ export class MeetingResolver {
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ): Promise<PaginatedMeetings> {
+    const { admin } = req.session;
+    const clientId = req.headers.clientid;
+    if (!clientId && !admin) {
+      return { meetings: [], hasMore: false };
+    }
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
     const today = moment().subtract(1, "d");
     const nextWeek = moment().add(7, "d");
-    const { admin } = req.session;
     const qb = createQueryBuilder("meeting", "meeting")
       .leftJoinAndSelect(
         "meeting.place",
         "place",
         'place.id = meeting."placeId"'
       )
+      .leftJoin("place.owner", "organization")
       .orderBy("meeting.createdAt", "ASC") // postgress need quotes
       .take(realLimitPlusOne);
 
@@ -119,7 +124,7 @@ export class MeetingResolver {
       qb.where('meeting."isActive" = :value', { value: true });
 
     if (!admin?.id) {
-      qb.where(
+      qb.andWhere(
         'meeting."meetingDate" > :today AND meeting."meetingDate" < :nextWeek',
         {
           today: today.utc(),
@@ -127,6 +132,10 @@ export class MeetingResolver {
         }
       );
     }
+
+    qb.andWhere("organization.id = :orgId", {
+      orgId: admin ? admin.org : clientId,
+    });
 
     const meetings = await qb.getMany();
     return {
