@@ -2,13 +2,13 @@
 
 name: deploy
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ dev ]
+    branches: [dev]
   pull_request:
-    branches: [ dev ]
+    branches: [dev]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -23,14 +23,14 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - uses: actions/checkout@v2
-      with:
+      - uses: actions/checkout@v2
+        with:
           fetch-depth: 0
-    - id: deploy
-      name: Deploy to dokku
-      uses: idoberko2/dokku-deploy-github-action@v1
-      with:
+      - id: deploy
+        name: Deploy to dokku
+        uses: idoberko2/dokku-deploy-github-action@v1
+        with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_DOKKU }}
           dokku-host: ${{ secrets.DROPLET_DOKKU }}
-          app-name: 'aforoserver'
-          remote-branch: 'dev'
+          app-name: "aforoserver"
+          remote-branch: "master"
