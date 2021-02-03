@@ -32,5 +32,5 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_DOKKU }}
           dokku-host: ${{ secrets.DROPLET_DOKKU }}
-          app-name: "aforoserver"
+          app-name: "aforo-dev"
           remote-branch: "master"
