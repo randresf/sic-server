@@ -1,34 +1,35 @@
-import "reflect-metadata";
-import { createConnection } from "typeorm";
-import express from "express";
-import path from "path";
-import Redis from "ioredis";
-import connecRedis from "connect-redis";
-import session from "express-session";
-import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
+import connecRedis from "connect-redis";
+import cors from "cors";
+import express from "express";
+import session from "express-session";
+//import { SubscriptionServer } from "subscriptions-transport-ws";
+import { createServer } from "http";
+import Redis from "ioredis";
+import path from "path";
+import "reflect-metadata";
 import { buildSchema } from "type-graphql";
+import { createConnection } from "typeorm";
 //import { execute, subscribe } from "graphql";
-import { __isProd__, cookieName } from "./constants";
+import { cookieName, __isProd__ } from "./constants";
+import { AdminResolver } from "./resolvers/admin";
 import { MeetingResolver } from "./resolvers/meeting";
+import { OrganizationResolver } from "./resolvers/organization";
+import { PlaceResolver } from "./resolvers/place";
 import { QuestionResolver } from "./resolvers/questions";
 import { ReservationResolver } from "./resolvers/reservation";
 import { UserResolver } from "./resolvers/user";
-import { AdminResolver } from "./resolvers/admin";
-import { PlaceResolver } from "./resolvers/place";
 import { MyContext } from "./types";
-//import { SubscriptionServer } from "subscriptions-transport-ws";
-import { createServer } from "http";
-import { OrganizationResolver } from "./resolvers/organization";
 // import { createReservationsLoader } from "./utils/createReservationsLoader";
 
 const port = process.env.PORT || 4000;
 const DBPROPS = {
   type: "postgres",
-  logging: !__isProd__,
+  //logging: !__isProd__,
+  logging: true,
   synchronize: true,
   entities: [path.join(__dirname, "./entities/*")],
-  migrations: [path.join(__dirname, "./migrations/*")]
+  migrations: [path.join(__dirname, "./migrations/*")],
 };
 
 const main = async () => {
@@ -38,7 +39,7 @@ const main = async () => {
         ...DBPROPS,
         database: process.env.DB_NAME,
         username: process.env.PG_USERNAME,
-        password: process.env.PG_PWD || undefined
+        password: process.env.PG_PWD || undefined,
       };
 
   const conn = await createConnection(conectionPorps as any);
@@ -50,13 +51,13 @@ const main = async () => {
   const redisClient = __isProd__
     ? new Redis(process.env.REDIS_URL)
     : new Redis();
-
+  console.log(redisClient);
   const app = express();
 
   app.use(
     cors({
       origin: ["http://localhost:3000", /aforo\.dev$/],
-      credentials: true
+      credentials: true,
     })
   );
 
@@ -68,11 +69,11 @@ const main = async () => {
         maxAge: 1000 * 60 * 60 * 24 * 7,
         httpOnly: true,
         secure: __isProd__,
-        sameSite: "lax"
+        sameSite: "lax",
       },
       saveUninitialized: false,
       secret: process.env.SECRET_SESSION_KEY || "af0r0",
-      resave: false
+      resave: false,
     })
   );
 
@@ -84,9 +85,9 @@ const main = async () => {
       ReservationResolver,
       AdminResolver,
       PlaceResolver,
-      OrganizationResolver
+      OrganizationResolver,
     ],
-    validate: false
+    validate: false,
   });
 
   const apolloServer = new ApolloServer({
@@ -94,9 +95,9 @@ const main = async () => {
     context: ({ res, req }): MyContext => ({
       req,
       res,
-      redisClient
+      redisClient,
       //reservationsLoader: createReservationsLoader(),
-    })
+    }),
   });
 
   apolloServer.applyMiddleware({ app, cors: false });

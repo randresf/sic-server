@@ -4,7 +4,9 @@ COPY package.json .
 
 RUN yarn install --production
 
-COPY ./dist .
+COPY . .
+
+RUN yarn build
 
 ENV NODE_ENV production
 ENV REACT_APP_URL aforo.dev

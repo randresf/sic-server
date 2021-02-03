@@ -6,7 +6,7 @@ import {
   ObjectType,
   Query,
   Resolver,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
 import { getConnection } from "typeorm";
 import { Organization } from "../entities/Organization";
@@ -38,9 +38,9 @@ export class PlaceResolver {
         errors: [
           {
             field: "organization",
-            message: "no existe organization"
-          }
-        ]
+            message: "no existe organization",
+          },
+        ],
       };
 
     if (!placeId) {
@@ -53,7 +53,7 @@ export class PlaceResolver {
         .returning("*")
         .execute();
       return {
-        place: [place.raw[0]]
+        place: [place.raw[0]],
       };
     }
 
@@ -72,25 +72,26 @@ export class PlaceResolver {
   @UseMiddleware(isAuth)
   async getUserPlaces(@Ctx() { req }: MyContext): Promise<PlaceResponse> {
     const { admin } = req.session;
+    console.log("session:", admin);
     let returning: PlaceResponse = {};
     try {
       const places = await Place.find({
         where: {
-          owner: admin?.org
-        }
+          owner: admin?.org,
+        },
       });
 
       returning = {
-        place: places
+        place: places,
       };
     } catch (err) {
       returning = {
         errors: [
           {
             field: "",
-            message: err.detail
-          }
-        ]
+            message: err.detail,
+          },
+        ],
       };
     }
     return returning;
