@@ -29,7 +29,6 @@ class LoginResponse {
 export class AdminResolver {
   @Query(() => Admin, { nullable: true })
   async heartBeat(@Ctx() { req }: MyContext) {
-    console.log("heartBeat >>>>>>>>>>>>>>>>>>", req.session);
     const { admin } = req.session;
     if (!admin?.id) return null;
     const updatedAdmin = await Admin.findOne({
@@ -68,7 +67,6 @@ export class AdminResolver {
           lastName: admin.lastName,
           id: admin.id,
         };
-        console.log("login......", req.session.admin);
         return { admin };
       }
     }

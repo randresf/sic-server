@@ -25,8 +25,7 @@ import { MyContext } from "./types";
 const port = process.env.PORT || 4000;
 const DBPROPS = {
   type: "postgres",
-  //logging: !__isProd__,
-  logging: true,
+  logging: !__isProd__,
   synchronize: true,
   entities: [path.join(__dirname, "./entities/*")],
   migrations: [path.join(__dirname, "./migrations/*")],
