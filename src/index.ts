@@ -55,7 +55,7 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: ["http://localhost:3000", /aforo\.dev$/],
+      origin: ["http://localhost:3000", /aforo\.website$/],
       credentials: true,
     })
   );
